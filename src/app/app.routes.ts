@@ -1,3 +1,63 @@
 import { Routes } from '@angular/router';
+import { AuthShellComponent } from './core/layout/auth-shell/auth-shell.component';
+import { ProtectedShellComponent } from './core/layout/protected-shell/protected-shell.component';
+import { authGuard } from './core/auth/services/auth-guard.service';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  // 🔹 Rutas públicas (layout AuthShell)
+  {
+    path: '',
+    component: AuthShellComponent,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'sign-in' },
+      {
+        path: 'sign-in',
+        loadComponent: () =>
+          import('./features/access/pages/sign-in/sign-in.page').then(
+            (m) => m.SignInPage
+          ),
+      },
+      {
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./features/access/pages/forgot-password/forgot-password.page').then(
+            (m) => m.ForgotPasswordPage
+          ),
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () =>
+          import('./features/access/pages/reset-password/reset-password.page').then(
+            (m) => m.ResetPasswordPage
+          ),
+      },
+    ],
+  },
+
+  // 🔹 Rutas protegidas (layout ProtectedShell + guard)
+  {
+    path: '',
+    component: ProtectedShellComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'tenant-select',
+        loadComponent: () =>
+          import('./features/access/pages/tenant-select/tenant-select.page').then(
+            (m) => m.TenantSelectPage
+          ),
+      },
+      {
+        path: 'app',
+        loadComponent: () =>
+          import('./features/access/pages/unauthorized/unauthorized.page').then(
+            (m) => m.UnauthorizedPage
+          ), // placeholder protegido
+      },
+    ],
+  },
+
+  // 🔹 Redirecciones
+  //{ path: '', pathMatch: 'full', redirectTo: 'sign-in' },
+  { path: '**', redirectTo: 'sign-in' },
+];

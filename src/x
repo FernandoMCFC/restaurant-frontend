@@ -1,0 +1,48 @@
+//@import "primeicons/primeicons.css";
+
+@import "tailwindcss";
+
+/* === Brand tokens (mantener en sync con manifest.theme_color) === */
+:root {
+  --brand-primary: #0E7490;       /* = manifest.theme_color */
+  --brand-on-primary: #ffffff;
+  --brand-surface: #0B1220;       /* = manifest.background_color (opcional) */
+  --brand-bg: #f8fafc;            /* fondo claro */
+  --brand-text: #0f172a;          /* texto por defecto */
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;                       /* <- quita el espacio en blanco */
+  background: var(--brand-bg);
+  color: var(--brand-text);
+}
+
+/* Ayudas de layout para auth */
+.auth-screen { min-height: 100vh; }  /* o 100dvh si prefieres */
+.auth-pane   { height: 100%; }       /* estira los hijos en la grilla */
+
+/* Botones y links con color de marca (PrimeNG override mínimo) */
+.p-button {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  color: var(--brand-on-primary) !important;
+}
+.p-button:enabled:hover {
+  filter: brightness(0.95);
+}
+a, .p-link {
+  color: var(--brand-primary);
+}
+
+/* Utilidad responsive básica para el auth-shell */
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .auth-grid {
+    grid-template-columns: 480px 1fr;
+    min-height: 100vh;
+  }
+}

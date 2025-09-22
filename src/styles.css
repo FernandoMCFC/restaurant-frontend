@@ -1,0 +1,61 @@
+/* === Tailwind + Prime Icons === */
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+/* === Tokens de color (violeta) === */
+:root{
+  /* Prime */
+  --p-primary-50:#f5f3ff;
+  --p-primary-100:#ede9fe;
+  --p-primary-200:#ddd6fe;
+  --p-primary-300:#c4b5fd;
+  --p-primary-400:#a78bfa;
+  --p-primary-500:#7c3aed; /* VIOLETA principal */
+  --p-primary-600:#6d28d9;
+  --p-primary-700:#5b21b6;
+  --p-primary-800:#4c1d95;
+  --p-primary-900:#3b0f7f;
+
+  --p-primary-color: var(--p-primary-500);
+  --p-primary-contrast-color: #ffffff;
+  --p-focus-ring-color: color-mix(in srgb, var(--p-primary-500) 35%, transparent);
+
+  /* Base de la app */
+  --brand-bg:#f8fafc;
+  --brand-text:#0f172a;
+
+  --app-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+              Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+html,body{height:100%}
+body{ margin:0; background:var(--brand-bg); color:var(--brand-text); font-family: var(--app-font); }
+
+/* === Fallback: botón Prime SIEMPRE violeta === */
+.p-button{
+  background-color: var(--p-primary-500) !important;
+  border-color: var(--p-primary-500) !important;
+  color: var(--p-primary-contrast-color) !important;
+}
+.p-button:enabled:hover{ filter:brightness(.96); }
+
+.p-component{
+  font-family: var(--app-font);
+}
+
+/* Enlaces por defecto en violeta */
+a,.p-link{ color: var(--p-primary-600); }
+
+/* === Hero derecho (degradé + puntitos) === */
+.auth-hero{
+  position: relative;
+  background: radial-gradient(1200px 700px at 80% 20%, #0e1b2d 0%, #0b1324 60%, #0b1324 100%);
+  color:#e5e7eb;
+}
+.auth-hero::after{
+  content:""; position:absolute; inset:0;
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size:16px 16px; color:rgba(255,255,255,.08);
+  mask-image: radial-gradient(circle at 80% 20%, #000 0%, transparent 75%);
+  pointer-events:none;
+}
