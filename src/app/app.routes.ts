@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthShellComponent } from './core/layout/auth-shell/auth-shell.component';
+import { AdminAuthShellComponent } from './core/layout/admin-auth-shell/admin-auth-shell.component';
 import { ProtectedShellComponent } from './core/layout/protected-shell/protected-shell.component';
 import { authGuard } from './core/auth/services/auth-guard.service';
 
@@ -33,6 +34,22 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // ADMIN (nuevo)
+    {
+      path: 'admin',
+      component: AdminAuthShellComponent,
+      children: [
+        {
+          path: 'sign-in',
+          loadComponent: () =>
+            import('./features/admin-access/pages/admin-sign-in/admin-sign-in.page')
+              .then(m => m.AdminSignInPage),
+        },
+        { path: '', pathMatch: 'full', redirectTo: 'sign-in' } // opcional
+      ]
+    },
+
 
   // 🔹 Rutas protegidas (layout ProtectedShell + guard)
   {

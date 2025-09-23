@@ -4,7 +4,7 @@ import { RouterOutlet } from '@angular/router';
 
 @Component({
   standalone: true,
-  selector: 'app-auth-shell',
+  selector: 'app-admin-auth-shell',
   imports: [CommonModule, RouterOutlet],
   template: `
     <section class="auth-shell">
@@ -35,19 +35,16 @@ import { RouterOutlet } from '@angular/router';
         <div class="right-mask"></div>
         <div class="right-grid"></div>
         <div class="right-content">
-          <h2>Bienvenido a la Web App Restaurant</h2>
+          <h2>Panel de Administración</h2>
           <p>
-            Organiza tus restaurantes con dashboards modernos y módulos claros.
-            Instálala como app (PWA) y úsala offline.
+            Gestiona restaurantes y usuarios desde un panel moderno y fácil de usar. Administra módulos de manera clara y accede a reportes en tiempo real.
           </p>
         </div>
       </div>
     </section>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
 
     /*  Layout general  */
     .auth-shell {
@@ -56,15 +53,13 @@ import { RouterOutlet } from '@angular/router';
       grid-template-columns: 1fr;
     }
     @media (min-width: 1024px) {
-      .auth-shell {
-        grid-template-columns: 1fr 1fr;
-      }
+      .auth-shell { grid-template-columns: 1fr 1fr; }
     }
 
     /*  Panel izquierdo  */
     .left {
       display: grid;
-      align-items: start;
+      align-items: start;       /* móvil: arriba */
       justify-items: center;
       padding-top: 32px;
       background: #fff;
@@ -73,21 +68,19 @@ import { RouterOutlet } from '@angular/router';
       width: 100%;
       display: grid;
       gap: 16px;
-      justify-items: center; 
-      --card-xp: 24px;       
+      justify-items: center;
+      --card-xp: 24px;
     }
     @media (min-width: 768px) {
       .left-inner { --card-xp: 40px; }
     }
     @media (min-width: 1024px) {
       .left {
-        align-items: center;
+        align-items: center;     /* desktop: centrado */
         padding-top: 0;
         padding: clamp(16px, 3vw, 32px);
       }
-      .left-inner {
-        width: min(92%, 920px);
-      }
+      .left-inner { width: min(92%, 920px); }
     }
 
     /* Logo */
@@ -104,12 +97,8 @@ import { RouterOutlet } from '@angular/router';
       width: auto;
       user-select: none;
     }
-    @media (min-width: 768px) {
-      .logo { height: 104px; }
-    }
-    @media (min-width: 1280px) {
-      .logo { height: 128px; }
-    }
+    @media (min-width: 768px) { .logo { height: 104px; } }
+    @media (min-width: 1280px) { .logo { height: 128px; } }
 
     /*  Card  */
     .auth-card {
@@ -124,9 +113,7 @@ import { RouterOutlet } from '@angular/router';
       padding: 28px var(--card-xp);
     }
     @media (min-width: 768px) {
-      .auth-card-body {
-        padding: 36px var(--card-xp);
-      }
+      .auth-card-body { padding: 36px var(--card-xp); }
     }
 
     /*  Panel derecho  */
@@ -141,43 +128,33 @@ import { RouterOutlet } from '@angular/router';
       place-items: center;
       padding: clamp(24px, 5vw, 48px);
     }
-    @media (min-width: 1024px) {
-      .right { display: grid; }
-    }
+    @media (min-width: 1024px) { .right { display: grid; } }
     .right-mask {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background:
         linear-gradient(180deg, rgba(255,255,255,.05), transparent 30%),
         linear-gradient(0deg, rgba(255,255,255,.05), transparent 30%);
       pointer-events: none;
     }
     .right-grid {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
       background-size: 22px 22px;
-      opacity: .25;
-      pointer-events: none;
+      opacity: .25; pointer-events: none;
     }
     .right-content {
-      position: relative;
-      z-index: 1;
-      max-width: 680px;
-      text-align: center;
+      position: relative; z-index: 1;
+      max-width: 680px; text-align: center;
     }
     .right-content h2 {
       font-size: clamp(36px, 5vw, 64px);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.01em;
-      margin: 0 0 12px;
+      font-weight: 800; line-height: 1.05;
+      letter-spacing: -0.01em; margin: 0 0 12px;
     }
     .right-content p {
       font-size: clamp(14px, 1.1vw, 16px);
-      opacity: .9;
-      margin: 0;
+      opacity: .9; margin: 0;
     }
   `]
 })
-export class AuthShellComponent {}
+export class AdminAuthShellComponent {}
