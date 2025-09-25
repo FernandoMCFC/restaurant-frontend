@@ -50,13 +50,27 @@ export const routes: Routes = [
       ]
     },
 
+    
+
 
   // 🔹 Rutas protegidas (layout ProtectedShell + guard)
   {
-    path: '',
+    path: 'app',
     component: ProtectedShellComponent,
     canActivate: [authGuard],
     children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/pages/dashboard.page').then(m => m.DashboardPage),
+      },
+
+      {
+        path: 'settings/restaurant',
+        loadComponent: () =>
+          import('./features/settings/pages/restaurant-settings.page').then(m => m.RestaurantSettingsPage),
+      },
+
       {
         path: 'tenant-select',
         loadComponent: () =>
@@ -64,13 +78,15 @@ export const routes: Routes = [
             (m) => m.TenantSelectPage
           ),
       },
-      {
+
+      /* {
         path: 'app',
         loadComponent: () =>
           import('./features/access/pages/unauthorized/unauthorized.page').then(
             (m) => m.UnauthorizedPage
-          ), // placeholder protegido
-      },
+          ), 
+      }, */
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },
 
