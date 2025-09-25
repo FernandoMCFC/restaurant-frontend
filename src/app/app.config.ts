@@ -23,7 +23,9 @@ export const appConfig: ApplicationConfig = {
                     order: 'tailwind-base, primeng, tailwind-utilities'
                   }
                 }
-            }
+            },
+            ripple: true,
+            inputStyle: 'outlined'
         }), provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerImmediately' //en produccion cambiar 

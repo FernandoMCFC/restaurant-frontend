@@ -3,6 +3,11 @@ import { AuthShellComponent } from './core/layout/auth-shell/auth-shell.componen
 import { AdminAuthShellComponent } from './core/layout/admin-auth-shell/admin-auth-shell.component';
 import { ProtectedShellComponent } from './core/layout/protected-shell/protected-shell.component';
 import { authGuard } from './core/auth/services/auth-guard.service';
+import { AppShellComponent } from './core/layout/app-shell/app-shell.component';
+
+
+
+
 
 export const routes: Routes = [
   // 🔹 Rutas públicas (layout AuthShell)
@@ -52,11 +57,10 @@ export const routes: Routes = [
 
     
 
-
   // 🔹 Rutas protegidas (layout ProtectedShell + guard)
   {
     path: 'app',
-    component: ProtectedShellComponent,
+    component: AppShellComponent,
     canActivate: [authGuard],
     children: [
       {
@@ -66,10 +70,11 @@ export const routes: Routes = [
       },
 
       {
-        path: 'settings/restaurant',
+        path: 'settings',
         loadComponent: () =>
           import('./features/settings/pages/restaurant-settings.page').then(m => m.RestaurantSettingsPage),
       },
+  
 
       {
         path: 'tenant-select',

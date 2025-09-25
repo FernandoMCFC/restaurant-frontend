@@ -1,6 +1,7 @@
 /* === Tailwind + Prime Icons === */
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
 
 /* === Tokens de color (violeta) === */
 :root{

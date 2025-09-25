@@ -1,28 +1,24 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Card } from 'primeng/card';
-import { Button } from 'primeng/button';
-import { RouterLink } from '@angular/router';
 
 @Component({
   standalone: true,
   selector: 'app-dashboard',
-  imports: [CommonModule, Card, Button, RouterLink],
   template: `
-    <div class="kpis">
-      <p-card header="Ordenes"><p>52</p></p-card>
-      <p-card header="Ventas"><p>Bs 2.100</p></p-card>
-     
-    </div>
-
-    <div class="mt">
-      <a pButton routerLink="/app/settings/restaurant" label="Configurar Restaurant" icon="pi pi-cog"></a>
+    <div class="grid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <div class="card-metric surface-card border-round p-3 shadow-1">
+          <div class="flex align-items-center justify-content-between">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-shopping-bag text-2xl"></i>
+              <span class="text-xl font-semibold">Órdenes</span>
+            </div>
+            <span class="text-2xl font-bold">128</span>
+          </div>
+          <div class="mt-2 text-color-secondary">Últimas 24h</div>
+        </div>
+      </div>
     </div>
   `,
-  styles: [`
-    .kpis{ display:grid; gap:1rem; grid-template-columns:1fr; }
-    @media (min-width: 1200px){ .kpis{ grid-template-columns: repeat(4, 1fr); } }
-    .mt{ margin-top:1rem; }
-  `]
+  styleUrl: './dashboard.page.css'
 })
 export class DashboardPage {}
