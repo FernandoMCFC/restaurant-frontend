@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { LayoutService } from '../layout.service';
+import { LayoutService } from '../services/layout.service';
 import { AppTopbarComponent } from './app-topbar.component';
 import { AppSidebarComponent } from './app-sidebar.component';
 

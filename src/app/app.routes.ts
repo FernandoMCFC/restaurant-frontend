@@ -1,27 +1,37 @@
 import { Routes } from '@angular/router';
 import { AuthShellComponent } from './core/layout/auth-shell/auth-shell.component';
 import { AdminAuthShellComponent } from './core/layout/admin-auth-shell/admin-auth-shell.component';
-import { ProtectedShellComponent } from './core/layout/protected-shell/protected-shell.component';
 import { authGuard } from './core/auth/services/auth-guard.service';
-import { AppShellComponent } from './core/layout/app-shell/app-shell.component';
 
-
-
-
+import { LayoutShellComponent } from './components/layout/shell/layout-shell.component';
+import { DashboardPage } from './pages/dashboard/dashboard.page';
+import { RestaurantSettingsPage } from './pages/settings/restaurant-settings.page';
 
 export const routes: Routes = [
-  // 🔹 Rutas públicas (layout AuthShell)
+  // 1) Raíz → dashboard
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+
+  // 2) PROTEGIDAS (PRIMERO para que tengan prioridad sobre las públicas en path: '')
+  {
+    path: '',
+    component: LayoutShellComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: 'dashboard', loadComponent: () => Promise.resolve(DashboardPage) },
+      { path: 'settings',  loadComponent: () => Promise.resolve(RestaurantSettingsPage) },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+    ],
+  },
+
+  // 3) PÚBLICAS (NO tocamos /sign-in ni sus paths)
   {
     path: '',
     component: AuthShellComponent,
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'sign-in' },
       {
         path: 'sign-in',
         loadComponent: () =>
-          import('./features/access/pages/sign-in/sign-in.page').then(
-            (m) => m.SignInPage
-          ),
+          import('./features/access/pages/sign-in/sign-in.page').then((m) => m.SignInPage),
       },
       {
         path: 'forgot-password',
@@ -40,62 +50,21 @@ export const routes: Routes = [
     ],
   },
 
-  // ADMIN (nuevo)
-    {
-      path: 'admin',
-      component: AdminAuthShellComponent,
-      children: [
-        {
-          path: 'sign-in',
-          loadComponent: () =>
-            import('./features/admin-access/pages/admin-sign-in/admin-sign-in.page')
-              .then(m => m.AdminSignInPage),
-        },
-        { path: '', pathMatch: 'full', redirectTo: 'sign-in' } // opcional
-      ]
-    },
-
-    
-
-  // 🔹 Rutas protegidas (layout ProtectedShell + guard)
+  // 4) ADMIN (se mantiene)
   {
-    path: 'app',
-    component: AppShellComponent,
-    canActivate: [authGuard],
+    path: 'admin',
+    component: AdminAuthShellComponent,
     children: [
       {
-        path: 'dashboard',
+        path: 'sign-in',
         loadComponent: () =>
-          import('./features/dashboard/pages/dashboard.page').then(m => m.DashboardPage),
+          import('./features/admin-access/pages/admin-sign-in/admin-sign-in.page')
+            .then(m => m.AdminSignInPage),
       },
-
-      {
-        path: 'settings',
-        loadComponent: () =>
-          import('./features/settings/pages/restaurant-settings.page').then(m => m.RestaurantSettingsPage),
-      },
-  
-
-      {
-        path: 'tenant-select',
-        loadComponent: () =>
-          import('./features/access/pages/tenant-select/tenant-select.page').then(
-            (m) => m.TenantSelectPage
-          ),
-      },
-
-      /* {
-        path: 'app',
-        loadComponent: () =>
-          import('./features/access/pages/unauthorized/unauthorized.page').then(
-            (m) => m.UnauthorizedPage
-          ), 
-      }, */
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-    ],
+      { path: '', pathMatch: 'full', redirectTo: 'sign-in' }
+    ]
   },
 
-  // 🔹 Redirecciones
-  //{ path: '', pathMatch: 'full', redirectTo: 'sign-in' },
-  { path: '**', redirectTo: 'sign-in' },
+  // 5) Fallback → dashboard (si no hay sesión, el guard te lleva a /sign-in)
+  { path: '**', redirectTo: 'dashboard' },
 ];
