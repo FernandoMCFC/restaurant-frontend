@@ -211,9 +211,10 @@ import { ButtonModule } from 'primeng/button';
   styles: [`
     :host{
       display:block;
-      background: linear-gradient(135deg, var(--p-surface-50, #f8fafc) 0%, var(--p-surface-100, #f1f5f9) 100%);
-      min-height:100vh;
-      padding:30px 20px;
+      background: var(--p-surface-0, #ffffff);
+/*       background: linear-gradient(135deg, var(--p-surface-50, #f8fafc) 0%, var(--p-surface-100, #f1f5f9) 100%);
+ */   min-height:100vh;
+      /* padding:30px 20px; */
     }
 
     .settings-container{

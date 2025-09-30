@@ -22,36 +22,47 @@ import { UiStore } from '../ui.store';
   `,
     
     styles: [`
-    :host { display:block; }
+      :host { display:block; }
 
-    /* Fondo general gris (como Sakai) y sin scroll en el wrapper */
-    .shell {
-      height: 100vh;
-      overflow: hidden;
-      background: var(--p-surface-100);
-    }
-
-    /* El cuerpo (zona derecha) es quien scrollea */
-    .shell-body {
-      height: calc(100vh - 64px);          /* 64px = altura del topbar */
-      overflow: auto;                       /* scroll solo aquí */
-      /* GUTTER desktop = 16px a la izquierda y derecha */
-      padding: 16px 16px 16px calc(280px + 32px); /* 280 + 16 (gutter izq) + 16 (separación) */
-      transition: padding-left .2s ease;
-      will-change: padding-left;
-      background: transparent;
-    }
-    .shell.sidebar-collapsed .shell-body {
-      padding-left: calc(72px + 32px); /* 72 + 16 + 16 */
-    }
-
-    @media (max-width: 991px) {
-      .shell-body {
-        padding: 16px;          /* en móvil hay margen respecto a bordes */
-        padding-top: 16px;
+      /* Fondo general gris (como Sakai) y sin scroll en el wrapper */
+      .shell {
+        height: 100vh;
+        overflow: hidden;
+        background: var(--p-surface-100);
       }
-    }
-  `]
+
+      /* El cuerpo (zona derecha) es quien scrollea */
+      .shell-body {
+        height: calc(100vh - 64px);          /* 64px = altura del topbar */
+        overflow: auto;                       /* scroll solo aquí */
+        /* ANTES: padding: 16px 16px 16px calc(280px + 32px) */
+        /* Ahora: sin padding horizontal derecho (full-width), conservando separación con sidebar a la izq */
+        padding-top: 16px;
+        padding-bottom: 16px;
+        padding-left: calc(280px + 32px);
+        padding-right: 0;                     /* ← sin margen lateral derecho */
+        transition: padding-left .2s ease;
+        will-change: padding-left;
+        background: transparent;
+      }
+
+      .shell.sidebar-collapsed .shell-body {
+        /* ANTES: padding-left: calc(72px + 32px) */
+        padding-left: calc(72px + 32px);      /* mantenemos la misma separación cuando la barra está colapsada */
+      }
+
+      @media (max-width: 991px) {
+        .shell-body {
+          /* ANTES: padding: 16px;  → eso metía margen a izquierda y derecha en móvil */
+          /* Ahora: pegado al borde en móvil (0 horizontal), dejando respiración solo vertical */
+          padding-top: 16px;
+          padding-bottom: 16px;
+          padding-left: 0;    /* ← sin margen lateral izq en móvil */
+          padding-right: 0;   /* ← sin margen lateral der en móvil */
+        }
+      }
+    `]
+
 
 
 })

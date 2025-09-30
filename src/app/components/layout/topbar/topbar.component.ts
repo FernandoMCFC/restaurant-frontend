@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiStore } from '../ui.store';
+import { UserMenuComponent } from './user-menu.component';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,UserMenuComponent],
   template: `
     <header class="topbar">
       <div class="left">
@@ -23,9 +24,11 @@ import { UiStore } from '../ui.store';
       </div>
 
       <div class="right">
-        <button class="icon-btn" type="button" aria-label="Perfil">
+        <!-- <button class="icon-btn" type="button" aria-label="Perfil">
           <i class="pi pi-user"></i>
-        </button>
+        </button> -->
+        <app-user-menu></app-user-menu>
+        
       </div>
     </header>
   `,

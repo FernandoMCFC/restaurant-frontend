@@ -14,29 +14,45 @@ import { RouterOutlet } from '@angular/router';
     </main>
   `,
   
-    styles: [`
-    :host { display:block; }
+  styles: [`
+  :host { display:block; }
 
-    /* El .shell-body ya maneja scroll y gutters.
-       Aquí solo dibujamos la "card" de contenido. */
-    .content {
-      background: transparent;
-    }
+  /* El .shell-body ya maneja scroll y gutters.
+     Aquí solo dibujamos la "card" de contenido a todo el ancho */
+  .content {
+    background: transparent;
+    width: 100%;
+    margin: 0;                 /* sin márgenes */
+  }
 
+  .content-inner {
+    display: grid;
+    gap: 1rem;
+    background: var(--p-surface-0);  /* card blanca principal */
+    border: 1px solid var(--p-content-border-color, var(--p-surface-200));
+    border-radius: 12px;
+    box-shadow: var(--p-shadow-1);
+
+    /* ANTES: padding: 1rem (metía “aire” lateral) */
+    /* Ahora: sin padding horizontal, solo vertical */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  @media (min-width: 992px) {
     .content-inner {
-      display: grid;
-      gap: 1rem;
-      background: var(--p-surface-0);  /* card blanca principal */
-      border: 1px solid var(--p-content-border-color, var(--p-surface-200));
-      border-radius: 12px;
-      box-shadow: var(--p-shadow-1);
-      padding: 1rem;
+      /* ANTES: padding: 1.25rem; */
+      padding-top: 1.25rem;
+      padding-bottom: 1.25rem;
+      padding-left: 0;   /* mantener 0 en desktop */
+      padding-right: 0;  /* mantener 0 en desktop */
+      gap: 1.25rem;
     }
+  }
+`]
 
-    @media (min-width: 992px) {
-      .content-inner { padding: 1.25rem; gap: 1.25rem; }
-    }
-  `]
 
 
 })
