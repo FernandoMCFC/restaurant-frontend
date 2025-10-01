@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
@@ -33,6 +33,11 @@ import { Order } from '../../pages/orders/orders.types';
             }}
           </span>
         </div>
+
+        <!-- Tiempo transcurrido SOLO cuando está en preparación -->
+        <span *ngIf="showElapsed" class="elapsed" [title]="startedAt ? (startedAt | date:'short') : ''">
+          ⏱ {{ elapsedMinutesLabel }}
+        </span>
       </header>
 
       <ul class="items">
@@ -79,11 +84,27 @@ import { Order } from '../../pages/orders/orders.types';
         justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
+        gap: 12px;
+        flex-wrap: wrap;
       }
       .left {
         display: flex;
         gap: 8px;
         align-items: center;
+        flex-wrap: wrap;
+      }
+
+      /* Badge de minutos (solo visible en preparación) */
+      .elapsed{
+        display:inline-block;
+        padding:4px 8px;
+        border-radius:999px;
+        background: var(--p-surface-100);
+        color: var(--p-text-color);
+        font-size:.85rem;
+        font-weight:600;
+        line-height:1;
+        white-space:nowrap;
       }
 
       .chip {
@@ -179,7 +200,7 @@ import { Order } from '../../pages/orders/orders.types';
     `,
   ],
 })
-export class OrderCardComponent {
+export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
   @Input() order!: Order;
 
   @Output() deliver = new EventEmitter<string>();
@@ -189,4 +210,65 @@ export class OrderCardComponent {
   @Input() isNew: boolean = false;
   /** Notifica que se vio (para quitar resaltado) */
   @Output() seen = new EventEmitter<string>();
+
+  /** ===== Tiempo transcurrido (solo en preparación) ===== */
+  startedAt: Date | null = null;
+  elapsedMinutesLabel = '—';
+  showElapsed = false;
+
+  private timer: any;
+
+  ngOnInit(): void {
+    // createdAt si existe
+    const createdAt = (this.order as any)?.createdAt as string | undefined;
+    this.startedAt = createdAt ? new Date(createdAt) : null;
+
+    this.updateTickerState();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['order']) {
+      // Si cambió el estado o el createdAt, reevalúa
+      const createdAt = (this.order as any)?.createdAt as string | undefined;
+      this.startedAt = createdAt ? new Date(createdAt) : null;
+      this.updateTickerState();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.clearTimer();
+  }
+
+  /** Arranca/para el temporizador según el estado actual */
+  private updateTickerState(): void {
+    this.showElapsed = this.order?.status === 'EN_PREPARACION';
+
+    if (this.showElapsed) {
+      // actualizar ahora y cada 60s
+      this.updateElapsed();
+      this.clearTimer();
+      this.timer = setInterval(() => this.updateElapsed(), 60_000);
+    } else {
+      // si no está en preparación, ocultar y detener
+      this.clearTimer();
+      this.elapsedMinutesLabel = '—';
+    }
+  }
+
+  private clearTimer(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  private updateElapsed(): void {
+    if (!this.startedAt || isNaN(this.startedAt.getTime())) {
+      this.elapsedMinutesLabel = '—';
+      return;
+    }
+    const diffMs = Date.now() - this.startedAt.getTime();
+    const mins = Math.max(0, Math.floor(diffMs / 60000));
+    this.elapsedMinutesLabel = `${mins} min`;
+  }
 }
