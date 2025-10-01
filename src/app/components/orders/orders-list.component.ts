@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -14,58 +14,64 @@ import { OrderCardComponent } from './order-card.component';
     <section class="orders">
       <header class="header">
         <h1>Pedidos</h1>
+
+        <button
+          pButton
+          icon="pi pi-plus"
+          class="add-btn p-button-rounded p-button-icon-only"
+          aria-label="Nuevo pedido"
+          (click)="goNew()">
+        </button>
       </header>
 
       <div class="grid-list">
         <app-order-card
           *ngFor="let o of orders()"
           [order]="o"
+          [isNew]="store.isNew(o.id)"
+          (seen)="store.markSeen($event)"
           (deliver)="onDeliver($event)"
           (cancel)="onCancel($event)">
         </app-order-card>
       </div>
-
-      <!-- FAB -->
-      <button class="fab" pButton pRipple icon="pi pi-plus" (click)="goNew()" title="Nuevo pedido"></button>
     </section>
   `,
   styles: [`
-    :host{ display:block; }
-    /* Padding local para que esta página no se vea "pegada"
-       (no afecta a las demás pantallas) */
-    .orders{ position:relative; padding:16px; }
-    @media (min-width: 992px){ .orders{ padding:20px; } }
+    .orders{ padding:16px; }
 
-    .header{ margin-bottom:12px; }
-    .header h1{ margin:0; font-size:22px; font-weight:700; color:var(--p-emphasis-high); }
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:12px;
+    }
+    .header h1{
+      margin:0; font-size:22px; font-weight:700; color:var(--p-emphasis-high);
+    }
+
+    /* Botón circular “+” perfectamente centrado */
+    .add-btn.p-button{
+      width:46px; height:46px; border-radius:9999px;
+      padding:0;                            /* sin padding extra */
+      display:inline-flex;
+      align-items:center; justify-content:center; /* centra el ícono */
+    }
+    .add-btn .p-button-icon,
+    .add-btn .p-button-icon-left{ margin:0 !important; } /* quita el desplazamiento del ícono */
+    .add-btn .p-button-label{ display:none; }            /* ocultar etiqueta por si PrimeNG la renderiza */
 
     .grid-list{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
+      display:grid; gap:16px;
+      grid-template-columns: repeat(1, minmax(0,1fr));
     }
-    @media (min-width: 768px){
+    @media (min-width: 640px){
       .grid-list{ grid-template-columns: repeat(2, 1fr); }
     }
     @media (min-width: 1200px){
       .grid-list{ grid-template-columns: repeat(3, 1fr); }
     }
-
-    .fab{
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      width: 56px; height: 56px; border-radius: 999px;
-      background: var(--p-primary-500); border:none;
-      color:white; box-shadow: var(--p-shadow-3);
-      display:grid; place-items:center;
-    }
   `]
 })
 export class OrdersListComponent {
-  private store = inject(OrdersStore);
-  private router = inject(Router);
-
+  constructor(public store: OrdersStore, private router: Router) {}
   orders = computed(() => this.store.orders());
 
   onDeliver(id: string){ this.store.setDelivered(id); }
