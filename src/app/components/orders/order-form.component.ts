@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+/* PrimeNG v20 */
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DrawerModule } from 'primeng/drawer';
@@ -29,6 +30,7 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
   ],
   template: `
     <div class="page">
+      <!-- Header -->
       <div class="topbar">
         <h1>Nuevo Pedido</h1>
         <p-overlaybadge [value]="itemsCount()" severity="info" styleClass="cart-badge">
@@ -39,6 +41,7 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
         </p-overlaybadge>
       </div>
 
+      <!-- Categorías -->
       <div class="cats">
         <a *ngFor="let c of categories"
            (click)="setActive(c.key)"
@@ -46,6 +49,7 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
       </div>
       <div class="sep"></div>
 
+      <!-- Grid productos -->
       <div class="list-area">
         <div class="grid">
           <div class="product-card" *ngFor="let p of currentProducts()">
@@ -75,13 +79,16 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
         </div>
       </div>
 
-      <!-- Modal agregar/editar -->
-      <app-product-add
-        [(visible)]="showAddModal"
-        [product]="selectedProduct || undefined"
-        [initialQty]="initialQty"
-        (confirm)="onConfirmAdd($event)">
-      </app-product-add>
+      <!-- Modal agregar/editar (se crea y destruye en cada apertura) -->
+      <ng-container *ngIf="showAddModal">
+        <app-product-add
+          [visible]="true"
+          [product]="selectedProduct || undefined"
+          [initialQty]="initialQty"
+          (confirm)="onConfirmAdd($event)"
+          (visibleChange)="handleModalVisible($event)">
+        </app-product-add>
+      </ng-container>
 
       <!-- Drawer carrito -->
       <p-drawer
@@ -91,7 +98,8 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
         [showCloseIcon]="true"
         [blockScroll]="true"
         [dismissible]="true"
-        [style]="{ width: 'min(420px, 90vw)' }">
+        [style]="{ width: 'min(420px, 90vw)' }"
+      >
         <ng-template pTemplate="header">
           <div class="cart-head">
             <h3>Resumen de pedido</h3>
@@ -119,17 +127,17 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
                 <tr>
                   <td>
                     <div class="item-name">{{ row.name }}</div>
-                    <!-- Se elimina la línea "Unit: ..." según lo solicitado -->
+                    <!-- (se eliminó "Unit: ...") -->
                   </td>
 
-                  <!-- Cantidad sin botones +/- -->
+                  <!-- Cantidad sin +/- -->
                   <td class="center">
                     <span class="qty-chip">{{ row.qty }}</span>
                   </td>
 
                   <td class="right">{{ row.qty * row.price | number:'1.2-2' }} Bs</td>
 
-                  <!-- Acciones: editar (lápiz) + eliminar (X) -->
+                  <!-- Acciones -->
                   <td class="right actions-cell">
                     <button pButton icon="pi pi-pencil"
                             class="p-button-text"
@@ -215,7 +223,6 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
     .cart-body{ padding:.75rem 1rem; }
     .right{ text-align:right; }
     .center{ text-align:center; }
-    .qty{ display:flex; align-items:center; gap:8px; }
     .qty-chip{
       display:inline-block; min-width:2rem; padding:.25rem .5rem; border-radius:9999px;
       background:var(--p-surface-200); font-weight:700;
@@ -234,6 +241,7 @@ export class OrderFormComponent {
   private router = inject(Router);
   private store = inject(OrdersStore);
 
+  /** Catálogo demo */
   allProducts: Product[] = [
     { id: 'sopa-mani',  name: 'Sopa de Maní',    qty: 1, price: 8 },
     { id: 'sopa-fideo', name: 'Sopa de Fideo',   qty: 1, price: 15 },
@@ -260,6 +268,7 @@ export class OrderFormComponent {
   byCategory = (key: string) => this.allProducts.filter(p => this.categories.find(c => c.key === key)?.productIds.includes(p.id));
   currentProducts = () => this.byCategory(this.activeKey());
 
+  /* Carrito */
   items = signal<OrderItem[]>([]);
   itemsCount = computed(() => this.items().reduce((a, it) => a + it.qty, 0));
   cartOpen = false;
@@ -274,7 +283,6 @@ export class OrderFormComponent {
     else l.push({ id: p.id, name: p.name, qty: 1, price: p.price });
     this.items.set(l);
   }
-
   private addItemWithQty(p: Product, qty: number){
     const l = [...this.items()];
     const i = l.findIndex(x => x.id === p.id);
@@ -283,7 +291,6 @@ export class OrderFormComponent {
     else l.push({ id: p.id, name: p.name, qty: q, price: p.price });
     this.items.set(l);
   }
-
   inc(i: number){ const l = [...this.items()]; l[i] = { ...l[i], qty: l[i].qty + 1 }; this.items.set(l); }
   dec(i: number){ const l = [...this.items()]; l[i] = { ...l[i], qty: Math.max(1, l[i].qty - 1) }; this.items.set(l); }
   remove(i: number){ const l = [...this.items()]; l.splice(i,1); this.items.set(l); }
@@ -295,20 +302,22 @@ export class OrderFormComponent {
   private editingIndex: number | null = null;
 
   openAddModal(p: Product){
-    this.selectedProduct = p;
+    this.cartOpen = false;
+    this.selectedProduct = { ...p };   // clonar para forzar cambio de @Input
     this.initialQty = 1;
-    this.editingIndex = null;           // modo "agregar"
-    this.showAddModal = true;
+    this.editingIndex = null;
+    setTimeout(() => this.showAddModal = true, 0); // crear modal en siguiente tick
   }
 
   openEditModal(index: number){
     const item = this.items()[index];
     const prod = this.allProducts.find(x => x.id === item.id);
     if (!prod) return;
-    this.selectedProduct = prod;
-    this.initialQty = item.qty;         // precargar cantidad actual
-    this.editingIndex = index;          // modo "editar"
-    this.showAddModal = true;
+    this.cartOpen = false;
+    this.selectedProduct = { ...prod };
+    this.initialQty = item.qty;
+    this.editingIndex = index;
+    setTimeout(() => this.showAddModal = true, 0);
   }
 
   onConfirmAdd(e: { productId: string; qty: number; notes?: string }){
@@ -316,7 +325,6 @@ export class OrderFormComponent {
     if (!p) return;
 
     if (this.editingIndex !== null) {
-      // actualizar cantidad del ítem editado
       const l = [...this.items()];
       if (l[this.editingIndex] && l[this.editingIndex].id === e.productId) {
         l[this.editingIndex] = { ...l[this.editingIndex], qty: Math.max(1, e.qty | 0) };
@@ -324,12 +332,20 @@ export class OrderFormComponent {
       }
       this.editingIndex = null;
     } else {
-      // agregar
       this.addItemWithQty(p, e.qty);
     }
 
-    this.showAddModal = false;
+    this.showAddModal = false;  // (visibleChange también lo apagará)
     this.selectedProduct = null;
+  }
+
+  /** Recibe el visibleChange del modal para destruirlo (por el *ngIf) */
+  handleModalVisible(v: boolean){
+    if (!v) {
+      this.showAddModal = false;
+      this.selectedProduct = null;
+      this.editingIndex = null;
+    }
   }
 
   /* Pedido */

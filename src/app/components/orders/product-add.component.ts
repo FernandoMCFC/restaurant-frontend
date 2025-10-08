@@ -1,4 +1,13 @@
-import { Component, EventEmitter, Input, Output, ViewEncapsulation, computed } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewEncapsulation,
+  computed,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -32,7 +41,7 @@ type ProductInput = {
       [focusOnShow]="false"
       [appendTo]="'body'"
       [autoZIndex]="true"
-      [baseZIndex]="1100"
+      [baseZIndex]="4000"
       [style]="{ width: 'min(560px, 92vw)' }"
       [breakpoints]="{ '960px': '80vw', '768px': '90vw', '640px': '100vw' }"
       styleClass="prod-add-dialog"
@@ -123,12 +132,11 @@ type ProductInput = {
     @media (max-width: 640px){ .confirm-btn.p-button{ width:100%; } }
   `]
 })
-export class ProductAddComponent {
+export class ProductAddComponent implements OnChanges {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
   @Input() product?: ProductInput;
-  /** Cantidad inicial (para modo "editar") */
   @Input() initialQty = 1;
 
   @Output() confirm = new EventEmitter<{ productId: string; qty: number; notes?: string }>();
@@ -142,9 +150,11 @@ export class ProductAddComponent {
     return `Agregar Bs. ${total}`;
   });
 
-  ngOnChanges(){
-    this.qty = Math.max(1, Math.floor(this.initialQty || 1));
-    this.notes = '';
+  ngOnChanges(changes: SimpleChanges){
+    if ('product' in changes || 'initialQty' in changes) {
+      this.qty = Math.max(1, Math.floor(this.initialQty || 1));
+      this.notes = '';
+    }
   }
 
   onHide(){
