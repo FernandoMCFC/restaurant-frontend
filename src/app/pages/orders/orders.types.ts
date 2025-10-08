@@ -2,7 +2,8 @@ export interface OrderItem {
   id: string;       // id del plato
   name: string;
   qty: number;
-  price: number;    // precio unitario
+  price: number;
+  //notes?: string; 
 }
 
 export type OrderStatus = 'EN_PREPARACION' | 'ENTREGADO' | 'CANCELADO';
