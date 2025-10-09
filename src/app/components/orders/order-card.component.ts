@@ -53,6 +53,8 @@ import { Order } from '../../pages/orders/orders.types';
       </div>
 
       <div class="actions">
+          <button pButton pRipple icon="pi pi-pencil" class="p-button-sm p-button-secondary p-button-outlined p-button-icon-only" aria-label="Editar"></button>
+
         <button
           pButton
           pRipple
