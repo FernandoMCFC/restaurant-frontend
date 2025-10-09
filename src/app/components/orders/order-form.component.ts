@@ -15,6 +15,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { OrdersStore } from '../../pages/orders/orders.store';
 import { OrderItem } from '../../pages/orders/orders.types';
 import { ProductAddComponent } from './product-add.component';
+import { CartDrawerComponent } from './cart-drawer.component';
 
 type Category = { key: string; label: string; productIds: string[] };
 type Product = OrderItem & { description?: string; imageUrl?: string };
@@ -26,7 +27,7 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
   imports: [
     CommonModule, FormsModule,
     ButtonModule, CardModule, DrawerModule, OverlayBadgeModule, TableModule, DividerModule, ToolbarModule,
-    ProductAddComponent
+    ProductAddComponent, CartDrawerComponent
   ],
   template: `
     <div class="page">
@@ -90,90 +91,16 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
         </app-product-add>
       </ng-container>
 
-      <!-- Drawer carrito -->
-      <p-drawer
+      <!-- Drawer carrito (componente separado, sin cambios) -->
+      <app-cart-drawer
         [(visible)]="cartOpen"
-        position="right"
-        [modal]="true"
-        [showCloseIcon]="true"
-        [blockScroll]="true"
-        [dismissible]="true"
-        [style]="{ width: 'min(420px, 90vw)' }"
-      >
-        <ng-template pTemplate="header">
-          <div class="cart-head">
-            <h3>Resumen de pedido</h3>
-            <span class="muted">Items: {{ itemsCount() }}</span>
-          </div>
-        </ng-template>
-
-        <div class="cart-body">
-          <div *ngIf="items().length; else empty">
-            <p-table
-              [value]="items()"
-              [tableStyle]="{ 'min-width': '100%' }"
-              [scrollable]="true"
-              scrollHeight="260px">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Producto</th>
-                  <th style="width:110px; text-align:center;">Cant.</th>
-                  <th style="width:120px">Precio</th>
-                  <th style="width:72px"></th>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="body" let-row let-i="rowIndex">
-                <tr>
-                  <td>
-                    <div class="item-name">{{ row.name }}</div>
-                    <!-- (se eliminó "Unit: ...") -->
-                  </td>
-
-                  <!-- Cantidad sin +/- -->
-                  <td class="center">
-                    <span class="qty-chip">{{ row.qty }}</span>
-                  </td>
-
-                  <td class="right">{{ row.qty * row.price | number:'1.2-2' }} Bs</td>
-
-                  <!-- Acciones -->
-                  <td class="right actions-cell">
-                    <button pButton icon="pi pi-pencil"
-                            class="p-button-text"
-                            (click)="openEditModal(i)"
-                            aria-label="Editar"></button>
-
-                    <button pButton icon="pi pi-times"
-                            class="p-button-text"
-                            (click)="remove(i)"
-                            aria-label="Eliminar"></button>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
-
-          <ng-template #empty>
-            <div class="empty"><i class="pi pi-inbox"></i><span>Sin productos</span></div>
-          </ng-template>
-
-          <p-divider></p-divider>
-
-          <div class="toolbar">
-            <div class="totals">
-              <div class="line total">
-                <span>Total</span>
-                <span>{{ total() | number:'1.2-2' }} Bs</span>
-              </div>
-            </div>
-            <div class="actions">
-              <button pButton label="Cancelar" severity="secondary" (click)="toggleCart(false)"></button>
-              <button pButton label="Guardar" icon="pi pi-check" (click)="save()"></button>
-            </div>
-          </div>
-        </div>
-      </p-drawer>
+        [items]="items()"
+        [itemsCount]="itemsCount()"
+        (edit)="openEditModal($event)"
+        (remove)="remove($event)"
+        (cancel)="toggleCart(false)"
+        (save)="save()"
+      />
     </div>
   `,
   styles: [`
@@ -223,12 +150,8 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
     .cart-body{ padding:.75rem 1rem; }
     .right{ text-align:right; }
     .center{ text-align:center; }
-    .qty-chip{
-      display:inline-block; min-width:2rem; padding:.25rem .5rem; border-radius:9999px;
-      background:var(--p-surface-200); font-weight:700;
-    }
+    .qty-chip{ display:inline-block; min-width:2rem; padding:.25rem .5rem; border-radius:9999px; background:var(--p-surface-200); font-weight:700; }
     .actions-cell .p-button{ margin-left:.25rem; }
-
     .empty{ display:flex; align-items:center; gap:.5rem; color:var(--p-text-muted-color); }
     .toolbar{ position:sticky; bottom:0; background:var(--p-surface-0); border-top:1px solid var(--p-surface-200); padding:.5rem 1rem; }
     .totals .line{ display:flex; justify-content:space-between; }
@@ -301,23 +224,30 @@ export class OrderFormComponent {
   initialQty = 1;
   private editingIndex: number | null = null;
 
+  /** Fuerza re-montar el modal para que SIEMPRE se abra */
+  private mountModal(product: Product, qty: number, editIndex: number | null){
+    // apaga por si estaba prendido (segunda/tercera apertura)
+    this.showAddModal = false;
+
+    // actualiza inputs del modal
+    this.selectedProduct = { ...product };
+    this.initialQty = Math.max(1, qty | 0);
+    this.editingIndex = editIndex;
+
+    // vuelve a mostrar en el próximo tick => el *ngIf recrea el componente
+    setTimeout(() => { this.showAddModal = true; }, 0);
+  }
+
   openAddModal(p: Product){
-    this.cartOpen = false;
-    this.selectedProduct = { ...p };   // clonar para forzar cambio de @Input
-    this.initialQty = 1;
-    this.editingIndex = null;
-    setTimeout(() => this.showAddModal = true, 0); // crear modal en siguiente tick
+    this.mountModal(p, 1, null);
   }
 
   openEditModal(index: number){
     const item = this.items()[index];
     const prod = this.allProducts.find(x => x.id === item.id);
     if (!prod) return;
-    this.cartOpen = false;
-    this.selectedProduct = { ...prod };
-    this.initialQty = item.qty;
-    this.editingIndex = index;
-    setTimeout(() => this.showAddModal = true, 0);
+    // Mantener el carrito abierto: NO tocamos this.cartOpen
+    this.mountModal(prod, item.qty, index);
   }
 
   onConfirmAdd(e: { productId: string; qty: number; notes?: string }){
@@ -335,8 +265,9 @@ export class OrderFormComponent {
       this.addItemWithQty(p, e.qty);
     }
 
-    this.showAddModal = false;  // (visibleChange también lo apagará)
+    this.showAddModal = false;
     this.selectedProduct = null;
+    // El carrito permanece abierto.
   }
 
   /** Recibe el visibleChange del modal para destruirlo (por el *ngIf) */
