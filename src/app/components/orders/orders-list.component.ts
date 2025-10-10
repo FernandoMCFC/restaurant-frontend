@@ -38,7 +38,7 @@ interface FilterOption {
             [options]="filterOptions"
             [multiple]="true"
             [(ngModel)]="selectedGroupsModel"
-            (onChange)="onFilterChange($event?.value)"
+            (onChange)="onFilterChange($event.value)"
             optionLabel="label"
             optionValue="value"
             class="state-filters">

@@ -96,19 +96,22 @@ type ProductInput = {
       </div>
 
       <ng-template pTemplate="footer">
+        <!-- fila inferior -->
         <div class="footer">
+          <!-- Cantidad pegada a la izquierda -->
           <div class="qty">
             <button pButton class="qty-btn" icon="pi pi-minus" (click)="dec()" [text]="true" aria-label="Disminuir"></button>
             <input class="qty-box" type="number" [value]="qty" min="1" (input)="onQtyInput($any($event.target).value)" />
             <button pButton class="qty-btn" icon="pi pi-plus" (click)="inc()" [text]="true" aria-label="Aumentar"></button>
           </div>
 
+          <!-- Botón Agregar ocupa el resto -->
           <button
             pButton
             class="confirm-btn"
-            label="Agregar"
             (click)="confirmAdd()"
             [disabled]="qty < 1">
+            {{ addLabel() }}
           </button>
         </div>
       </ng-template>
@@ -117,91 +120,114 @@ type ProductInput = {
   styles: [`
     :host{ display:block; }
 
-    /* ===== 1) BORDES CUADRADOS del diálogo ===== */
-    :host ::ng-deep .p-dialog.prod-add-dialog{
-      --p-dialog-border-radius: 0px;     /* variable del tema */
+    /* === Esquinas rectas del modal === */
+    .p-dialog.prod-add-dialog{
+      --p-dialog-border-radius: 0px;
       border-radius: 0 !important;
     }
-    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-header,
-    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-content,
-    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-footer{
+    .p-dialog.prod-add-dialog .p-dialog-header,
+    .p-dialog.prod-add-dialog .p-dialog-content,
+    .p-dialog.prod-add-dialog .p-dialog-footer{
       border-radius: 0 !important;
     }
 
-    /* Mantengo tu tamaño/espaciados en escritorio */
-    .prod-add-dialog .p-dialog{ display:grid; grid-template-rows:auto 1fr auto; max-height:100vh; }
-    .prod-add-dialog .p-dialog-header{ padding:.85rem 1rem; border-bottom:1px solid var(--p-surface-200); }
-    .prod-add-dialog .p-dialog-content{ padding:0 1rem 1rem; overflow:auto; max-height:calc(100vh - 8rem); }
-    .prod-add-dialog .p-dialog-footer{ padding:.75rem 1rem; border-top:1px solid var(--p-surface-200); background:var(--p-surface-0); }
+    /* Aire en header/content/footer */
+    .p-dialog.prod-add-dialog .p-dialog-header{
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--p-surface-200);
+    }
+    .p-dialog.prod-add-dialog .p-dialog-content{
+      padding: .5rem 1.25rem 1.25rem;
+      max-height: calc(100vh - 8rem);
+      overflow: auto;
+    }
 
-    .modal-header{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-    .modal-header .title{ font-size:1.1rem; font-weight:700; line-height:1.2; }
+    /* ====== CLAVE para alinear a la izquierda EXACTO ====== */
+    .p-dialog.prod-add-dialog .p-dialog-footer{
+      display: flex;                 /* forzamos flex en el propio footer del diálogo */
+      align-items: center;
+      justify-content: flex-start;   /* nada centrado por el tema */
+      gap: .9rem;
+      padding: .9rem 1.25rem;        /* mismo padding lateral que el content */
+      border-top: 1px solid var(--p-surface-200);
+      background: var(--p-surface-0);
+    }
 
-    .modal-body{ display:grid; gap:.75rem; }
-    .desc{ margin:.25rem 0 .5rem; color:var(--p-text-muted-color); font-size:.925rem; }
+    /* La fila interna ocupa todo el ancho y no añade márgenes extra */
+    .footer{
+      display: contents;             /* evita añadir márgenes/padding propios */
+    }
 
+    .modal-body{ display:grid; gap:.9rem; }
+    .desc{ margin:.1rem 0 .4rem; color:var(--p-text-muted-color); font-size:.95rem; }
     .media{
       width:100%; height:200px;
-      display:grid; place-items:center; border-radius:.5rem;
-      overflow:hidden; border:1px dashed var(--p-surface-300); background:var(--p-surface-50);
+      display:grid; place-items:center;
+      border-radius:.5rem; overflow:hidden;
+      border:1px dashed var(--p-surface-300);
+      background:var(--p-surface-50);
     }
     .media img{ width:100%; height:100%; object-fit:cover; display:block; }
     .media .ph{ width:100%; height:100%; display:grid; place-items:center; color:var(--p-text-muted-color); }
+    .notes{ display:grid; gap:.4rem; }
+    .notes label{ font-weight:600; font-size:.95rem; }
+    .status{ display:grid; gap:.4rem; }
+    .status label{ font-weight:600; font-size:.95rem; }
 
-    .notes{ display:grid; gap:.35rem; }
-    .notes label{ font-weight:600; font-size:.9rem; }
-    .notes :where(textarea){ width:100%; }
-
-    .status{ display:grid; gap:.35rem; }
-    .status label{ font-weight:600; font-size:.9rem; }
-
-    /* ===== 2) FOOTER EN ESCRITORIO:
-       - la CANTIDAD arranca alineada con el contenido
-       - el BOTÓN "Agregar" ocupa todo el ancho restante
-    =================================================== */
-    .footer{
-      display:grid;
-      grid-template-columns: auto 1fr;
-      gap:.75rem;
+    /* Elementos de cantidad */
+    .qty{
+      display:flex;
       align-items:center;
+      gap:.55rem;
+      flex: 0 0 auto;       /* no crece: queda pegado al borde izquierdo del padding */
     }
-    .qty{ display:flex; align-items:center; gap:.5rem; justify-self:start; }
     .qty-btn.p-button{ width:2.25rem; height:2.25rem; border-radius:.75rem; }
-    .qty-box{ width:4rem; height:2.25rem; text-align:center; border:1px solid var(--p-surface-300); border-radius:.75rem; background:var(--p-surface-0); font-weight:700; }
-
-    .confirm-btn.p-button{
-      min-height:40px; padding:.5rem 1.25rem; border-radius:.75rem; font-weight:700;
-      width:100%;                /* ocupa el resto de la fila */
-      justify-self: stretch;
+    .qty-box{
+      width:4rem; height:2.25rem; text-align:center;
+      border:1px solid var(--p-surface-300);
+      border-radius:.75rem;
+      background:var(--p-surface-0);
+      font-weight:700;
     }
 
-    /* Asegura el panel del Select sobre el diálogo */
-    :host ::ng-deep .p-select-panel{ z-index:5001; }
+    /* Botón Agregar ocupa el resto del ancho disponible */
+    .confirm-btn.p-button{
+      min-height:42px;
+      padding:.65rem 1.25rem;
+      border-radius:.75rem;
+      font-weight:700;
 
-    /* ===== 3) MÓVIL: FULL SCREEN + footer centrado ===== */
+      flex: 1 1 auto;       /* se expande para llenar el resto */
+      width: auto;
+      min-width: 0;
+    }
+
+    /* Panel del Select por encima del diálogo */
+    :host ::ng-deep .p-select-panel{ z-index: 5001; }
+
+    /* Móvil: full-screen y centrado vertical */
     @media (max-width: 640px){
-      /* ocupa TODA la pantalla; evita el centrado por transform del dialog */
-      :host ::ng-deep .p-dialog.prod-add-dialog{
+      .p-dialog.prod-add-dialog{
         position: fixed !important;
-        inset: 0 !important;            /* top/right/bottom/left: 0 */
+        inset: 0 !important;
         transform: none !important;
         width: 100vw !important;
         height: 100vh !important;
         max-height: 100vh !important;
         margin: 0 !important;
-        border-radius: 0 !important;
       }
-      .prod-add-dialog .p-dialog-content{
-        padding: 0 12px 12px;
+      .p-dialog.prod-add-dialog .p-dialog-content{
+        padding: .5rem 1rem 1rem;
         max-height: calc(100vh - 8rem);
       }
 
-      /* footer centrado; botón a todo el ancho debajo de la cantidad */
-      .footer{
-        grid-template-columns: 1fr;
-        justify-items: center;
+      /* en móvil, centramos y el botón al 100% */
+      .p-dialog.prod-add-dialog .p-dialog-footer{
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .75rem;
       }
-      .qty{ justify-self: center; }
       .confirm-btn.p-button{ width: 100%; }
     }
   `]
@@ -234,9 +260,7 @@ export class ProductAddComponent implements OnChanges {
     if ('product' in changes || 'initialQty' in changes) {
       this.qty = Math.max(1, Math.floor(this.initialQty || 1));
       this.notes = '';
-      if (this.showStatus) {
-        this.itemStatus = (this.initialStatus ?? 'EN_PREPARACION') as ItemStatus;
-      }
+      if (this.showStatus) this.itemStatus = (this.initialStatus ?? 'EN_PREPARACION') as ItemStatus;
     }
   }
 
