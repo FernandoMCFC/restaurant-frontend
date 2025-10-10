@@ -1,5 +1,5 @@
 import { Component, HostListener, ViewEncapsulation, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ import { ProductAddComponent } from './product-add.component';
 import { CartDrawerComponent } from './cart-drawer.component';
 
 type Category = { key: string; label: string; productIds: string[] };
-// Importante: el catálogo visual NO necesita itemStatus/notes
+// Catálogo visual NO necesita itemStatus/notes
 type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string; imageUrl?: string };
 
 @Component({
@@ -26,7 +26,9 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
   standalone: true,
   encapsulation: ViewEncapsulation.None,
   imports: [
-    CommonModule, FormsModule,
+    /* 👇 añadimos los directives standalone para quitar advertencias */
+    CommonModule, NgIf, NgForOf,
+    FormsModule,
     ButtonModule, CardModule, DrawerModule, OverlayBadgeModule, TableModule, DividerModule, ToolbarModule,
     ProductAddComponent, CartDrawerComponent
   ],
@@ -94,14 +96,14 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
         </app-product-add>
       </ng-container>
 
-      <!-- Drawer carrito (componente separado, sin cambios) -->
+      <!-- Drawer carrito -->
       <app-cart-drawer
         [(visible)]="cartOpen"
         [items]="items()"
         [itemsCount]="itemsCount()"
         (edit)="openEditModal($event)"
         (remove)="remove($event)"
-        (cancel)="toggleCart(false)"
+        (cancel)="cancel()"
         (save)="save()"
       />
     </div>
@@ -147,20 +149,6 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
     .prod-price{ font-weight:700; }
 
     .add-btn.p-button{ width:40px; height:40px; border-radius:9999px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
-
-    .cart-head{ position:sticky; top:0; z-index:1; background:var(--p-surface-0); border-bottom:1px solid var(--p-surface-200); padding:.75rem 1rem; }
-    .cart-head h3{ margin:0 0 6px; font-size:1rem; font-weight:800; }
-    .cart-body{ padding:.75rem 1rem; }
-    .right{ text-align:right; }
-    .center{ text-align:center; }
-    .qty-chip{ display:inline-block; min-width:2rem; padding:.25rem .5rem; border-radius:9999px; background:var(--p-surface-200); font-weight:700; }
-    .actions-cell .p-button{ margin-left:.25rem; }
-    .empty{ display:flex; align-items:center; gap:.5rem; color:var(--p-text-muted-color); }
-    .toolbar{ position:sticky; bottom:0; background:var(--p-surface-0); border-top:1px solid var(--p-surface-200); padding:.5rem 1rem; }
-    .totals .line{ display:flex; justify-content:space-between; }
-    .totals .line.total{ font-size:16px; font-weight:700; }
-    .actions{ display:flex; gap:.5rem; justify-content:flex-end; }
-    .muted{ color:var(--p-text-muted-color); }
   `]
 })
 export class OrderFormComponent {
@@ -233,15 +221,11 @@ export class OrderFormComponent {
 
   /** Fuerza re-montar el modal para que SIEMPRE se abra */
   private mountModal(product: Product, qty: number, editIndex: number | null){
-    // apaga por si estaba prendido (segunda/tercera apertura)
     this.showAddModal = false;
-
-    // actualiza inputs del modal
     this.selectedProduct = { ...product };
     this.initialQty = Math.max(1, qty | 0);
     this.editingIndex = editIndex;
 
-    // Configura visibilidad y estado inicial del Select
     if (editIndex !== null) {
       this.modalShowStatus = true;
       this.modalInitialStatus = this.items()[editIndex]?.itemStatus ?? 'EN_PREPARACION';
@@ -250,19 +234,15 @@ export class OrderFormComponent {
       this.modalInitialStatus = undefined;
     }
 
-    // vuelve a mostrar en el próximo tick => el *ngIf recrea el componente
     setTimeout(() => { this.showAddModal = true; }, 0);
   }
 
-  openAddModal(p: Product){
-    this.mountModal(p, 1, null);
-  }
+  openAddModal(p: Product){ this.mountModal(p, 1, null); }
 
   openEditModal(index: number){
     const item = this.items()[index];
     const prod = this.allProducts.find(x => x.id === item.id);
     if (!prod) return;
-    // Mantener el carrito abierto: NO tocamos this.cartOpen
     this.mountModal(prod, item.qty, index);
   }
 
@@ -283,15 +263,13 @@ export class OrderFormComponent {
       }
       this.editingIndex = null;
     } else {
-      this.addItemWithQty(p, e.qty); // ya crea con EN_PREPARACION
+      this.addItemWithQty(p, e.qty);
     }
 
     this.showAddModal = false;
     this.selectedProduct = null;
-    // El carrito permanece abierto.
   }
 
-  /** Recibe el visibleChange del modal para destruirlo (por el *ngIf) */
   handleModalVisible(v: boolean){
     if (!v) {
       this.showAddModal = false;
@@ -302,7 +280,7 @@ export class OrderFormComponent {
     }
   }
 
-  /* Pedido */
+  /* Pedido para guardar en OrdersStore */
   customer = '';
   type: 'MESA' | 'LLEVAR' = 'MESA';
   table: number | null = 1;

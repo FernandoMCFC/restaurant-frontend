@@ -1,23 +1,40 @@
-export type ItemStatus = 'EN_PREPARACION' | 'PREPARADO' | 'ENTREGADO';
+// Tipos base del módulo de pedidos.
+
+// Estado por ítem (coincide con tu modal product-add)
+export type ItemStatus =
+  | 'EN_PREPARACION'
+  | 'PREPARADO'
+  | 'ENTREGADO'
+  | 'CANCELADO';
+
+// Estado del pedido completo
+export type OrderStatus =
+  | 'EN_PREPARACION'
+  | 'ENTREGADO'
+  | 'CANCELADO';
+
+export type OrderMode = 'MESA' | 'LLEVAR';
 
 export interface OrderItem {
-  id: string;       // id del plato
-  name: string;
-  qty: number;
-  price: number;
-  notes?: string;
-  itemStatus: ItemStatus; // estado del item en el pedido
+  id: string;          // id del producto
+  name: string;        // nombre del producto
+  qty: number;         // cantidad
+  price: number;       // precio unitario
+  notes?: string;      // notas opcionales del ítem
+  itemStatus?: ItemStatus; // <--- CLAVE: tu UI usa "itemStatus"
 }
 
-export type OrderStatus = 'EN_PREPARACION' | 'ENTREGADO' | 'CANCELADO';
-
 export interface Order {
-  id: string;                // ej. '45'
-  customer?: string;
-  type: 'LLEVAR' | 'MESA';
-  table?: number | null;
+  id: string;
   items: OrderItem[];
-  total: number;             // derivado de items
-  status: OrderStatus;
-  createdAt: Date;
+  total: number;
+
+  // Campos del drawer
+  customer?: string;       // nombre del cliente
+  type: OrderMode;         // MESA | LLEVAR
+  table?: number | null;   // número de mesa (solo si MESA)
+
+  // Metadatos
+  status?: OrderStatus;    // estado del pedido
+  createdAt?: string;      // ISO
 }
