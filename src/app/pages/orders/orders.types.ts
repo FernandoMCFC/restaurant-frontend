@@ -1,9 +1,12 @@
+export type ItemStatus = 'EN_PREPARACION' | 'PREPARADO' | 'ENTREGADO';
+
 export interface OrderItem {
   id: string;       // id del plato
   name: string;
   qty: number;
   price: number;
-  //notes?: string; 
+  notes?: string;
+  itemStatus: ItemStatus; // estado del item en el pedido
 }
 
 export type OrderStatus = 'EN_PREPARACION' | 'ENTREGADO' | 'CANCELADO';

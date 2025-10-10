@@ -13,12 +13,13 @@ import { DividerModule } from 'primeng/divider';
 import { ToolbarModule } from 'primeng/toolbar';
 
 import { OrdersStore } from '../../pages/orders/orders.store';
-import { OrderItem } from '../../pages/orders/orders.types';
+import { OrderItem, ItemStatus } from '../../pages/orders/orders.types';
 import { ProductAddComponent } from './product-add.component';
 import { CartDrawerComponent } from './cart-drawer.component';
 
 type Category = { key: string; label: string; productIds: string[] };
-type Product = OrderItem & { description?: string; imageUrl?: string };
+// Importante: el catálogo visual NO necesita itemStatus/notes
+type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string; imageUrl?: string };
 
 @Component({
   selector: 'app-order-form',
@@ -86,6 +87,8 @@ type Product = OrderItem & { description?: string; imageUrl?: string };
           [visible]="true"
           [product]="selectedProduct || undefined"
           [initialQty]="initialQty"
+          [showStatus]="modalShowStatus"
+          [initialStatus]="modalInitialStatus"
           (confirm)="onConfirmAdd($event)"
           (visibleChange)="handleModalVisible($event)">
         </app-product-add>
@@ -203,7 +206,7 @@ export class OrderFormComponent {
     const l = [...this.items()];
     const i = l.findIndex(x => x.id === p.id);
     if (i >= 0) l[i] = { ...l[i], qty: l[i].qty + 1 };
-    else l.push({ id: p.id, name: p.name, qty: 1, price: p.price });
+    else l.push({ id: p.id, name: p.name, qty: 1, price: p.price, notes: '', itemStatus: 'EN_PREPARACION' });
     this.items.set(l);
   }
   private addItemWithQty(p: Product, qty: number){
@@ -211,7 +214,7 @@ export class OrderFormComponent {
     const i = l.findIndex(x => x.id === p.id);
     const q = Math.max(1, qty | 0);
     if (i >= 0) l[i] = { ...l[i], qty: l[i].qty + q };
-    else l.push({ id: p.id, name: p.name, qty: q, price: p.price });
+    else l.push({ id: p.id, name: p.name, qty: q, price: p.price, notes: '', itemStatus: 'EN_PREPARACION' });
     this.items.set(l);
   }
   inc(i: number){ const l = [...this.items()]; l[i] = { ...l[i], qty: l[i].qty + 1 }; this.items.set(l); }
@@ -224,6 +227,10 @@ export class OrderFormComponent {
   initialQty = 1;
   private editingIndex: number | null = null;
 
+  // controles del Select de estado en el modal
+  modalShowStatus = false;
+  modalInitialStatus: ItemStatus | undefined = undefined;
+
   /** Fuerza re-montar el modal para que SIEMPRE se abra */
   private mountModal(product: Product, qty: number, editIndex: number | null){
     // apaga por si estaba prendido (segunda/tercera apertura)
@@ -233,6 +240,15 @@ export class OrderFormComponent {
     this.selectedProduct = { ...product };
     this.initialQty = Math.max(1, qty | 0);
     this.editingIndex = editIndex;
+
+    // Configura visibilidad y estado inicial del Select
+    if (editIndex !== null) {
+      this.modalShowStatus = true;
+      this.modalInitialStatus = this.items()[editIndex]?.itemStatus ?? 'EN_PREPARACION';
+    } else {
+      this.modalShowStatus = false;
+      this.modalInitialStatus = undefined;
+    }
 
     // vuelve a mostrar en el próximo tick => el *ngIf recrea el componente
     setTimeout(() => { this.showAddModal = true; }, 0);
@@ -250,19 +266,24 @@ export class OrderFormComponent {
     this.mountModal(prod, item.qty, index);
   }
 
-  onConfirmAdd(e: { productId: string; qty: number; notes?: string }){
+  onConfirmAdd(e: { productId: string; qty: number; notes?: string; itemStatus?: ItemStatus }){
     const p = this.allProducts.find(x => x.id === e.productId);
     if (!p) return;
 
     if (this.editingIndex !== null) {
       const l = [...this.items()];
       if (l[this.editingIndex] && l[this.editingIndex].id === e.productId) {
-        l[this.editingIndex] = { ...l[this.editingIndex], qty: Math.max(1, e.qty | 0) };
+        l[this.editingIndex] = {
+          ...l[this.editingIndex],
+          qty: Math.max(1, e.qty | 0),
+          notes: e.notes ?? l[this.editingIndex].notes ?? '',
+          itemStatus: (e.itemStatus ?? l[this.editingIndex].itemStatus ?? 'EN_PREPARACION')
+        };
         this.items.set(l);
       }
       this.editingIndex = null;
     } else {
-      this.addItemWithQty(p, e.qty);
+      this.addItemWithQty(p, e.qty); // ya crea con EN_PREPARACION
     }
 
     this.showAddModal = false;
@@ -276,6 +297,8 @@ export class OrderFormComponent {
       this.showAddModal = false;
       this.selectedProduct = null;
       this.editingIndex = null;
+      this.modalShowStatus = false;
+      this.modalInitialStatus = undefined;
     }
   }
 

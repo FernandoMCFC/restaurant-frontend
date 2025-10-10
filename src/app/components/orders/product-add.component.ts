@@ -16,6 +16,9 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
+import { SelectModule } from 'primeng/select';
+
+import type { ItemStatus } from '../../pages/orders/orders.types';
 
 type ProductInput = {
   id: string;
@@ -29,7 +32,7 @@ type ProductInput = {
   selector: 'app-product-add',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, FormsModule, DialogModule, ButtonModule, InputNumberModule, TextareaModule],
+  imports: [CommonModule, FormsModule, DialogModule, ButtonModule, InputNumberModule, TextareaModule, SelectModule],
   template: `
     <p-dialog
       [(visible)]="visible"
@@ -42,7 +45,7 @@ type ProductInput = {
       [appendTo]="'body'"
       [autoZIndex]="true"
       [baseZIndex]="4000"
-      [style]="{ width: 'min(560px, 92vw)' }"
+      [style]="{ width: 'min(480px, 92vw)' }"
       [breakpoints]="{ '960px': '80vw', '768px': '90vw', '640px': '100vw' }"
       styleClass="prod-add-dialog"
       (onHide)="onHide()"
@@ -75,6 +78,21 @@ type ProductInput = {
             placeholder="Ej.: sin cebolla, extra salsa...">
           </textarea>
         </div>
+
+        <!-- Select de estado: solo en modo edición -->
+        <div class="status" *ngIf="showStatus">
+          <label for="itemStatus">Estado del producto</label>
+          <p-select
+            id="itemStatus"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="itemStatus"
+            placeholder="Selecciona el estado"
+            [appendTo]="'body'"
+            [scrollHeight]="'220px'">
+          </p-select>
+        </div>
       </div>
 
       <ng-template pTemplate="footer">
@@ -88,7 +106,7 @@ type ProductInput = {
           <button
             pButton
             class="confirm-btn"
-            [label]="addLabel()"
+            label="Agregar"
             (click)="confirmAdd()"
             [disabled]="qty < 1">
           </button>
@@ -99,37 +117,93 @@ type ProductInput = {
   styles: [`
     :host{ display:block; }
 
-    .prod-add-dialog .p-dialog{ border-radius:0 !important; display:grid; grid-template-rows:auto 1fr auto; max-height:100vh; }
+    /* ===== 1) BORDES CUADRADOS del diálogo ===== */
+    :host ::ng-deep .p-dialog.prod-add-dialog{
+      --p-dialog-border-radius: 0px;     /* variable del tema */
+      border-radius: 0 !important;
+    }
+    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-header,
+    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-content,
+    :host ::ng-deep .p-dialog.prod-add-dialog .p-dialog-footer{
+      border-radius: 0 !important;
+    }
+
+    /* Mantengo tu tamaño/espaciados en escritorio */
+    .prod-add-dialog .p-dialog{ display:grid; grid-template-rows:auto 1fr auto; max-height:100vh; }
     .prod-add-dialog .p-dialog-header{ padding:.85rem 1rem; border-bottom:1px solid var(--p-surface-200); }
     .prod-add-dialog .p-dialog-content{ padding:0 1rem 1rem; overflow:auto; max-height:calc(100vh - 8rem); }
     .prod-add-dialog .p-dialog-footer{ padding:.75rem 1rem; border-top:1px solid var(--p-surface-200); background:var(--p-surface-0); }
 
-    @media (max-width: 640px){
-      .prod-add-dialog .p-dialog{ width:100vw !important; height:100vh !important; max-width:100vw !important; }
-      .prod-add-dialog .p-dialog-content{ max-height:calc(100vh - 8rem); }
+    .modal-header{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .modal-header .title{ font-size:1.1rem; font-weight:700; line-height:1.2; }
+
+    .modal-body{ display:grid; gap:.75rem; }
+    .desc{ margin:.25rem 0 .5rem; color:var(--p-text-muted-color); font-size:.925rem; }
+
+    .media{
+      width:100%; height:200px;
+      display:grid; place-items:center; border-radius:.5rem;
+      overflow:hidden; border:1px dashed var(--p-surface-300); background:var(--p-surface-50);
+    }
+    .media img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .media .ph{ width:100%; height:100%; display:grid; place-items:center; color:var(--p-text-muted-color); }
+
+    .notes{ display:grid; gap:.35rem; }
+    .notes label{ font-weight:600; font-size:.9rem; }
+    .notes :where(textarea){ width:100%; }
+
+    .status{ display:grid; gap:.35rem; }
+    .status label{ font-weight:600; font-size:.9rem; }
+
+    /* ===== 2) FOOTER EN ESCRITORIO:
+       - la CANTIDAD arranca alineada con el contenido
+       - el BOTÓN "Agregar" ocupa todo el ancho restante
+    =================================================== */
+    .footer{
+      display:grid;
+      grid-template-columns: auto 1fr;
+      gap:.75rem;
+      align-items:center;
+    }
+    .qty{ display:flex; align-items:center; gap:.5rem; justify-self:start; }
+    .qty-btn.p-button{ width:2.25rem; height:2.25rem; border-radius:.75rem; }
+    .qty-box{ width:4rem; height:2.25rem; text-align:center; border:1px solid var(--p-surface-300); border-radius:.75rem; background:var(--p-surface-0); font-weight:700; }
+
+    .confirm-btn.p-button{
+      min-height:40px; padding:.5rem 1.25rem; border-radius:.75rem; font-weight:700;
+      width:100%;                /* ocupa el resto de la fila */
+      justify-self: stretch;
     }
 
-    .modal-header .title{ font-size:1.2rem; font-weight:700; line-height:1.2; }
-    .modal-body{ padding:.25rem 0 .75rem; }
-    .desc{ margin:.25rem 0 .75rem; color:var(--p-text-secondary-color); font-size:.95rem; }
+    /* Asegura el panel del Select sobre el diálogo */
+    :host ::ng-deep .p-select-panel{ z-index:5001; }
 
-    .media{ width:100%; aspect-ratio:16/9; background:var(--p-surface-100); border-radius:.5rem; overflow:hidden; display:grid; place-items:center; margin-bottom:.75rem; }
-    .media img{ width:100%; height:100%; object-fit:cover; }
-    .media .ph{ width:100%; height:100%; display:grid; place-items:center;
-      background:repeating-linear-gradient(45deg,var(--p-surface-100),var(--p-surface-100) 12px,var(--p-surface-200) 12px,var(--p-surface-200) 24px);
-      color:var(--p-text-muted-color); font-size:1.4rem; }
+    /* ===== 3) MÓVIL: FULL SCREEN + footer centrado ===== */
+    @media (max-width: 640px){
+      /* ocupa TODA la pantalla; evita el centrado por transform del dialog */
+      :host ::ng-deep .p-dialog.prod-add-dialog{
+        position: fixed !important;
+        inset: 0 !important;            /* top/right/bottom/left: 0 */
+        transform: none !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+      }
+      .prod-add-dialog .p-dialog-content{
+        padding: 0 12px 12px;
+        max-height: calc(100vh - 8rem);
+      }
 
-    .notes label{ display:block; font-weight:700; margin:.25rem 0 .35rem; }
-    .notes textarea{ width:100%; resize:none; }
-
-    .footer{ width:100%; display:flex; align-items:center; gap:.75rem; justify-content:space-between; flex-wrap:wrap; }
-    .qty{ display:flex; align-items:center; gap:.5rem; }
-    .qty-btn.p-button{ width:36px; height:36px; border-radius:9999px; padding:0; display:inline-flex; align-items:center; justify-content:center;
-      background:var(--p-surface-200); color:var(--p-emphasis-high); }
-    .qty-box{ width:72px; height:36px; border:1px solid var(--p-surface-300); border-radius:.5rem; text-align:center; background:var(--p-surface-100); font-weight:700; }
-
-    .confirm-btn.p-button{ min-height:40px; padding:.5rem 1.25rem; border-radius:.75rem; font-weight:700; flex:1 1 auto; }
-    @media (max-width: 640px){ .confirm-btn.p-button{ width:100%; } }
+      /* footer centrado; botón a todo el ancho debajo de la cantidad */
+      .footer{
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+      .qty{ justify-self: center; }
+      .confirm-btn.p-button{ width: 100%; }
+    }
   `]
 })
 export class ProductAddComponent implements OnChanges {
@@ -139,21 +213,30 @@ export class ProductAddComponent implements OnChanges {
   @Input() product?: ProductInput;
   @Input() initialQty = 1;
 
-  @Output() confirm = new EventEmitter<{ productId: string; qty: number; notes?: string }>();
+  @Input() showStatus = false;
+  @Input() initialStatus?: ItemStatus;
+
+  @Output() confirm = new EventEmitter<{ productId: string; qty: number; notes?: string; itemStatus?: ItemStatus }>();
 
   qty = 1;
   notes = '';
 
-  addLabel = computed(() => {
-    const price = this.product?.price ?? 0;
-    const total = Math.max(0, price * this.qty);
-    return `Agregar Bs. ${total}`;
-  });
+  itemStatus: ItemStatus = 'EN_PREPARACION';
+  statusOptions = [
+    { label: 'En preparación', value: 'EN_PREPARACION' as ItemStatus },
+    { label: 'Preparado', value: 'PREPARADO' as ItemStatus },
+    { label: 'Entregado', value: 'ENTREGADO' as ItemStatus },
+  ];
+
+  addLabel = computed(() => 'Agregar');
 
   ngOnChanges(changes: SimpleChanges){
     if ('product' in changes || 'initialQty' in changes) {
       this.qty = Math.max(1, Math.floor(this.initialQty || 1));
       this.notes = '';
+      if (this.showStatus) {
+        this.itemStatus = (this.initialStatus ?? 'EN_PREPARACION') as ItemStatus;
+      }
     }
   }
 
@@ -165,19 +248,22 @@ export class ProductAddComponent implements OnChanges {
   }
 
   onQtyInput(val: any){
-    const n = Math.floor(Number(val));
-    this.qty = isNaN(n) ? 1 : Math.max(1, n);
+    const n = Math.floor(Number(val) || 1);
+    this.qty = Math.max(1, n);
   }
+
   inc(){ this.qty = Math.max(1, this.qty + 1); }
   dec(){ this.qty = Math.max(1, this.qty - 1); }
 
   confirmAdd(){
     if (!this.product) return;
-    this.confirm.emit({
+    const payload: { productId: string; qty: number; notes?: string; itemStatus?: ItemStatus } = {
       productId: this.product.id,
       qty: Math.max(1, this.qty | 0),
       notes: this.notes?.trim() || undefined
-    });
+    };
+    if (this.showStatus) payload.itemStatus = this.itemStatus;
+    this.confirm.emit(payload);
     this.visible = false;
     this.visibleChange.emit(false);
   }

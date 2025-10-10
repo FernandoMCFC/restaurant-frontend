@@ -16,7 +16,6 @@ export type OrderItem = { id: string; name: string; qty: number; price: number }
   encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, DrawerModule, TableModule, ButtonModule, DividerModule, ToolbarModule],
   template: `
-    <!-- Drawer carrito (idéntico al que tenías) -->
     <p-drawer
       [(visible)]="visible"
       position="right"
@@ -39,8 +38,8 @@ export type OrderItem = { id: string; name: string; qty: number; price: number }
           <p-table
             [value]="items"
             [tableStyle]="{ 'min-width': '100%' }"
-            [scrollable]="true"
-            scrollHeight="260px">
+            [style]="{ width: '100%' }"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th>Producto</th>
@@ -76,29 +75,59 @@ export type OrderItem = { id: string; name: string; qty: number; price: number }
               </tr>
             </ng-template>
           </p-table>
+
+          <p-divider styleClass="my-2"></p-divider>
+
+          <div class="totals">
+            <span>Total</span>
+            <b>{{ total() | number:'1.2-2' }} Bs</b>
+          </div>
         </div>
 
         <ng-template #empty>
-          <div class="empty"><i class="pi pi-inbox"></i><span>Sin productos</span></div>
+          <div class="empty">No hay productos en el pedido.</div>
         </ng-template>
-
-        <p-divider></p-divider>
-
-        <div class="toolbar">
-          <div class="totals">
-            <div class="line total">
-              <span>Total</span>
-              <span>{{ total() | number:'1.2-2' }} Bs</span>
-            </div>
-          </div>
-          <div class="actions">
-            <button pButton label="Cancelar" severity="secondary" (click)="cancel.emit()"></button>
-            <button pButton label="Guardar" icon="pi pi-check" (click)="save.emit()"></button>
-          </div>
-        </div>
       </div>
+
+      <ng-template pTemplate="footer">
+        <div class="cart-actions">
+          <button pButton label="Cancelar" class="p-button-text" (click)="cancel.emit()"></button>
+          <span class="spacer"></span>
+          <button pButton label="Guardar" (click)="save.emit()"></button>
+        </div>
+      </ng-template>
     </p-drawer>
-  `
+  `,
+  styles: [`
+    :host{ display:block; }
+    .cart-head{ display:flex; align-items:center; justify-content:space-between; }
+    .muted{ color: var(--p-text-muted-color); font-size:.85rem; }
+
+    .cart-body{ display:block; }
+    .item-name{ font-weight:700; }
+    .center{ text-align:center; }
+    .right{ text-align:right; }
+    .actions-cell .p-button{ margin-left:4px; }
+
+    .qty-chip{
+      display:inline-block; min-width:36px; text-align:center;
+      padding:.25rem .5rem; border-radius:999px;
+      background:var(--p-surface-200);
+      font-weight:700;
+    }
+
+    .totals{
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:1rem; font-weight:700; padding:.25rem 0;
+    }
+
+    .empty{
+      text-align:center; padding:2rem 0; color:var(--p-text-muted-color);
+    }
+
+    .cart-actions{ display:flex; align-items:center; }
+    .cart-actions .spacer{ flex:1 1 auto; }
+  `]
 })
 export class CartDrawerComponent {
   @Input() visible = false;
