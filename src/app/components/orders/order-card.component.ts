@@ -65,6 +65,15 @@ import { Order } from '../../pages/orders/orders.types';
           label="Cancelar"
           class="p-button-sm p-button-danger p-button-outlined"
           (click)="cancel.emit(order.id)"></button>
+
+        <!-- Editar solo icono (sin fondo ni borde) -->
+        <button
+          class="icon-btn"
+          (click)="onEditClick($event)"
+          aria-label="Editar"
+          title="Editar">
+          <img src="/icons/edit.png" alt="Editar" width="18" height="18" />
+        </button>
       </div>
     </article>
   `,
@@ -117,30 +126,12 @@ import { Order } from '../../pages/orders/orders.types';
         font-weight: 600;
         border: 1px solid transparent;
       }
-      .chip.id {
-        background: var(--p-primary-100);
-        color: var(--p-primary-700);
-      }
-      .chip.type.mesa {
-        background: var(--p-blue-100);
-        color: var(--p-blue-700);
-      }
-      .chip.type.llevar {
-        background: var(--p-orange-100);
-        color: var(--p-orange-700);
-      }
-      .chip.status.prep {
-        background: var(--p-yellow-100);
-        color: var(--p-yellow-700);
-      }
-      .chip.status.done {
-        background: var(--p-green-100);
-        color: var(--p-green-700);
-      }
-      .chip.status.cancel {
-        background: var(--p-red-100);
-        color: var(--p-red-700);
-      }
+      .chip.id { background: var(--p-primary-100); color: var(--p-primary-700); }
+      .chip.type.mesa { background: var(--p-blue-100); color: var(--p-blue-700); }
+      .chip.type.llevar { background: var(--p-orange-100); color: var(--p-orange-700); }
+      .chip.status.prep { background: var(--p-yellow-100); color: var(--p-yellow-700); }
+      .chip.status.done { background: var(--p-green-100); color: var(--p-green-700); }
+      .chip.status.cancel { background: var(--p-red-100); color: var(--p-red-700); }
 
       .items {
         list-style: none;
@@ -149,18 +140,9 @@ import { Order } from '../../pages/orders/orders.types';
         display: grid;
         gap: 6px;
       }
-      .items li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .name {
-        color: var(--p-emphasis-high);
-      }
-      .sub {
-        color: var(--p-emphasis-medium);
-        font-weight: 600;
-      }
+      .items li { display: flex; justify-content: space-between; align-items: center; }
+      .name { color: var(--p-emphasis-high); }
+      .sub { color: var(--p-emphasis-medium); font-weight: 600; }
 
       .total {
         display: flex;
@@ -169,28 +151,28 @@ import { Order } from '../../pages/orders/orders.types';
         margin: 8px 0 12px;
         font-size: 15px;
       }
-      .total span {
-        color: var(--p-emphasis-medium);
-      }
+      .total span { color: var(--p-emphasis-medium); }
 
-      .actions {
-        display: flex;
-        gap: 8px;
+      .actions { display: flex; gap: 8px; align-items:center; }
+
+      /* solo icono */
+      .icon-btn{
+        background: transparent;
+        border: 0;
+        padding: 0;
+        line-height: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
+      .icon-btn:hover img{ opacity:.85; }
 
       /* === Resaltado/animación para pedidos nuevos === */
       @keyframes cardPulse {
-        0% {
-          box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.35);
-          transform: translateY(2px);
-        }
-        60% {
-          box-shadow: 0 8px 30px -8px rgba(250, 204, 21, 0.55);
-          transform: translateY(0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
-        }
+        0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.35); transform: translateY(2px); }
+        60% { box-shadow: 0 8px 30px -8px rgba(250, 204, 21, 0.55); transform: translateY(0); }
+        100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
       }
       .order-card.is-new {
         background: #fef9c3; /* amber-100 */
@@ -205,6 +187,7 @@ export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
 
   @Output() deliver = new EventEmitter<string>();
   @Output() cancel = new EventEmitter<string>();
+  @Output() edit = new EventEmitter<string>();   // <- nuevo
 
   /** Estado visual “nuevo” */
   @Input() isNew: boolean = false;
@@ -219,37 +202,28 @@ export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
   private timer: any;
 
   ngOnInit(): void {
-    // createdAt si existe
     const createdAt = (this.order as any)?.createdAt as string | undefined;
     this.startedAt = createdAt ? new Date(createdAt) : null;
-
     this.updateTickerState();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['order']) {
-      // Si cambió el estado o el createdAt, reevalúa
       const createdAt = (this.order as any)?.createdAt as string | undefined;
       this.startedAt = createdAt ? new Date(createdAt) : null;
       this.updateTickerState();
     }
   }
 
-  ngOnDestroy(): void {
-    this.clearTimer();
-  }
+  ngOnDestroy(): void { this.clearTimer(); }
 
-  /** Arranca/para el temporizador según el estado actual */
   private updateTickerState(): void {
     this.showElapsed = this.order?.status === 'EN_PREPARACION';
-
     if (this.showElapsed) {
-      // actualizar ahora y cada 60s
       this.updateElapsed();
       this.clearTimer();
       this.timer = setInterval(() => this.updateElapsed(), 60_000);
     } else {
-      // si no está en preparación, ocultar y detener
       this.clearTimer();
       this.elapsedMinutesLabel = '—';
     }
@@ -260,6 +234,11 @@ export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
       clearInterval(this.timer);
       this.timer = null;
     }
+  }
+
+  onEditClick(ev: Event){
+    ev.stopPropagation();
+    this.edit.emit(this.order?.id);
   }
 
   private updateElapsed(): void {

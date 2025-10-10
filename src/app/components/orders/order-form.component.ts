@@ -1,7 +1,7 @@
-import { Component, HostListener, ViewEncapsulation, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, ViewEncapsulation, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 /* PrimeNG v20 */
 import { ButtonModule } from 'primeng/button';
@@ -36,7 +36,7 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
     <div class="page">
       <!-- Header -->
       <div class="topbar">
-        <h1>Nuevo Pedido</h1>
+        <h1>{{ editingOrderId() ? 'Editar Pedido' : 'Nuevo Pedido' }}</h1>
         <p-overlaybadge [value]="itemsCount()" severity="info" styleClass="cart-badge">
           <button pButton class="p-button-rounded p-button-text cart-btn"
                   icon="pi pi-shopping-cart"
@@ -151,9 +151,13 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
     .add-btn.p-button{ width:40px; height:40px; border-radius:9999px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
   `]
 })
-export class OrderFormComponent {
+export class OrderFormComponent implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private store = inject(OrdersStore);
+
+  /** ID si estamos editando */
+  editingOrderId = signal<string | null>(null);
 
   /** Catálogo demo */
   allProducts: Product[] = [
@@ -287,14 +291,46 @@ export class OrderFormComponent {
 
   @HostListener('window:resize') onResize(){}
 
+  /** ================== NUEVO: soporta edición desde query params ================== */
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe(qp => {
+      const id = qp.get('edit');
+      const open = qp.get('openCart');
+
+      if (id) {
+        const order = this.store.getById(id);
+        if (order) {
+          this.editingOrderId.set(id);
+          this.items.set(structuredClone(order.items || []));
+          this.customer = order.customer ?? '';
+          this.type = order.type;
+          this.table = this.type === 'MESA' ? (order.table ?? 1) : null;
+        }
+      }
+
+      if (open === '1') this.toggleCart(true);
+    });
+  }
+
   save(){
-    this.store.addOrder({
+    const payload = {
       customer: this.customer || undefined,
       type: this.type,
-      table: this.type === 'MESA' ? this.table ?? 1 : null,
+      table: this.type === 'MESA' ? (this.table ?? 1) : null,
       items: this.items(),
-    });
+    };
+
+    const editId = this.editingOrderId();
+    if (editId) {
+      // Actualizar pedido existente
+      this.store.updateOrder(editId, payload as any);
+    } else {
+      // Crear nuevo pedido (comportamiento original)
+      this.store.addOrder(payload as any);
+    }
+
     this.router.navigateByUrl('/orders');
   }
+
   cancel(){ this.router.navigateByUrl('/orders'); }
 }

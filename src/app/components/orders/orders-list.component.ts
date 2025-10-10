@@ -71,7 +71,8 @@ interface FilterOption {
           [isNew]="store.isNew(o.id)"
           (seen)="store.markSeen($event)"
           (deliver)="onDeliver($event)"
-          (cancel)="onCancel($event)">
+          (cancel)="onCancel($event)"
+          (edit)="onEdit($event)">
         </app-order-card>
       </div>
     </section>
@@ -226,6 +227,10 @@ export class OrdersListComponent {
 
   onDeliver(id: string){ this.store.setDelivered(id); }
   onCancel(id: string){ this.store.cancel(id); }
+
+  /** 👉 NUEVO: manejar “Editar” y navegar con el id */
+  onEdit(id: string){ this.router.navigateByUrl(`/orders/new?edit=${id}&openCart=1`); }
+
   goNew(){ this.router.navigateByUrl('/orders/new'); }
   trackById = (_: number, x: any) => x?.id;
 }
