@@ -1,3 +1,4 @@
+// src/app/components/orders/order-card.component.ts
 import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -12,13 +13,15 @@ import { Order } from '../../pages/orders/orders.types';
     <article class="order-card" [class.is-new]="isNew" (click)="seen.emit(order.id)">
       <header class="order-head">
         <div class="left">
-          <span class="chip id">#{{ order.id }}</span>
+          <!-- Tipo + número de mesa (si corresponde) -->
           <span
             class="chip type"
             [class.mesa]="order.type === 'MESA'"
             [class.llevar]="order.type === 'LLEVAR'">
-            {{ order.type === 'MESA' ? 'Mesa' : 'Llevar' }}
+            {{ order.type === 'MESA' ? (tableLabel ?? 'Mesa') : 'Para llevar' }}
           </span>
+
+          <!-- Estado en la MISMA FILA (conservando clases y colores originales) -->
           <span
             class="chip status"
             [class.prep]="order.status === 'EN_PREPARACION'"
@@ -34,7 +37,7 @@ import { Order } from '../../pages/orders/orders.types';
           </span>
         </div>
 
-        <!-- Tiempo transcurrido SOLO cuando está en preparación -->
+        <!-- Tiempo transcurrido SOLO cuando está en preparación (igual que el original) -->
         <span *ngIf="showElapsed" class="elapsed" [title]="startedAt ? (startedAt | date:'short') : ''">
           ⏱ {{ elapsedMinutesLabel }}
         </span>
@@ -126,7 +129,7 @@ import { Order } from '../../pages/orders/orders.types';
         font-weight: 600;
         border: 1px solid transparent;
       }
-      .chip.id { background: var(--p-primary-100); color: var(--p-primary-700); }
+      /* Se elimina la .chip.id del header */
       .chip.type.mesa { background: var(--p-blue-100); color: var(--p-blue-700); }
       .chip.type.llevar { background: var(--p-orange-100); color: var(--p-orange-700); }
       .chip.status.prep { background: var(--p-yellow-100); color: var(--p-yellow-700); }
@@ -187,8 +190,7 @@ export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
 
   @Output() deliver = new EventEmitter<string>();
   @Output() cancel = new EventEmitter<string>();
-  @Output() edit = new EventEmitter<string>();   // <- nuevo
-
+  @Output() edit = new EventEmitter<string>();   // <- mantiene tu output
   /** Estado visual “nuevo” */
   @Input() isNew: boolean = false;
   /** Notifica que se vio (para quitar resaltado) */
@@ -200,6 +202,20 @@ export class OrderCardComponent implements OnInit, OnDestroy, OnChanges {
   showElapsed = false;
 
   private timer: any;
+
+  /** Label "Mesa 5" si existe número de mesa; si no, null */
+  get tableLabel(): string | null {
+    const num =
+      (this.order as any)?.table ??
+      (this.order as any)?.mesa ??
+      (this.order as any)?.tableNumber ??
+      (this.order as any)?.tableNo ??
+      null;
+
+    if (num === null || num === undefined) return null;
+    const s = `${num}`.trim();
+    return s ? `Mesa ${s}` : null;
+  }
 
   ngOnInit(): void {
     const createdAt = (this.order as any)?.createdAt as string | undefined;
