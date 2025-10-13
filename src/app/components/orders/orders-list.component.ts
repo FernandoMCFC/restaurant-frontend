@@ -190,7 +190,7 @@ interface FilterOption {
       margin: 0 0 16px 0;
     }
 
-    /* Breakpoints responsivos */
+    /* Breakpoints responsivo */
     @media (max-width: 1200px){
       .grid-list{ column-count: 2; }
     }
