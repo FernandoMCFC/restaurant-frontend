@@ -13,47 +13,57 @@ import { RouterOutlet } from '@angular/router';
       </div>
     </main>
   `,
-  
   styles: [`
-  :host { display:block; }
+  /* === Mantiene tu diseño, pero habilita alto y overflow para scroll interno en hijos === */
+  :host { 
+    display:block; 
+    height:100%;       /* clave */
+    min-height:0;      /* clave */
+  }
 
-  /* El .shell-body ya maneja scroll y gutters.
-     Aquí solo dibujamos la "card" de contenido a todo el ancho */
   .content {
     background: transparent;
     width: 100%;
-    margin: 0;                 /* sin márgenes */
+    margin: 0;
+
+    /* NUEVO: que ocupe el alto, sin permitir scroll global aquí */
+    display: flex;
+    flex-direction: column;
+    height: 100%;      /* clave */
+    min-height: 0;     /* clave */
+    overflow: hidden;  /* delega el scroll al contenido hijo */
   }
 
   .content-inner {
+    /* conservamos tu grid y estilos visuales */
     display: grid;
     gap: 1rem;
-    background: var(--p-surface-0);  /* card blanca principal */
+    background: var(--p-surface-0);
     border: 1px solid var(--p-content-border-color, var(--p-surface-200));
     border-radius: 12px;
     box-shadow: var(--p-shadow-1);
 
-    /* ANTES: padding: 1rem (metía “aire” lateral) */
-    /* Ahora: sin padding horizontal, solo vertical */
+    /* paddings iguales a tu archivo */
     padding-top: 1rem;
     padding-bottom: 1rem;
     padding-left: 0;
     padding-right: 0;
+
+    /* NUEVO: permitir que el hijo (Orders) maneje scroll interno */
+    height: 100%;      /* clave */
+    min-height: 0;     /* clave */
+    overflow: hidden;  /* el hijo decide dónde scrollear */
   }
 
   @media (min-width: 992px) {
     .content-inner {
-      /* ANTES: padding: 1.25rem; */
       padding-top: 1.25rem;
       padding-bottom: 1.25rem;
-      padding-left: 0;   /* mantener 0 en desktop */
-      padding-right: 0;  /* mantener 0 en desktop */
+      padding-left: 0;
+      padding-right: 0;
       gap: 1.25rem;
     }
   }
 `]
-
-
-
 })
 export class ContentComponent {}

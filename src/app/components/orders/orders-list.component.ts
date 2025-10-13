@@ -29,11 +29,22 @@ interface FilterOption {
   ],
   template: `
     <section class="orders">
+      <!-- Header en 2 filas: (1) Título + +, (2) Categorías con scroll horizontal -->
       <header class="header">
-        <div class="title-row">
+        <div class="title-line">
           <h1>Pedidos</h1>
 
-          <!-- Filtros: SelectButton múltiple (PrimeNG 20) -->
+          <button
+            pButton
+            icon="pi pi-plus"
+            class="add-btn p-button-rounded p-button-icon-only"
+            aria-label="Nuevo pedido"
+            (click)="goNew()">
+          </button>
+        </div>
+
+        <!-- Fila de categorías con SCROLL HORIZONTAL -->
+        <div class="chips-scroll">
           <p-selectbutton
             [options]="filterOptions"
             [multiple]="true"
@@ -53,69 +64,96 @@ interface FilterOption {
             </ng-template>
           </p-selectbutton>
         </div>
-
-        <!-- Botón + circular -->
-        <button
-          pButton
-          icon="pi pi-plus"
-          class="add-btn p-button-rounded p-button-icon-only"
-          aria-label="Nuevo pedido"
-          (click)="goNew()">
-        </button>
       </header>
 
-      <!-- LISTA -->
-      <div class="grid-list">
-        <app-order-card
-          *ngFor="let o of filtered(); let i = index; trackBy: trackById"
-          [order]="o"
-          [isNew]="store.isNew(o.id)"
-          (seen)="store.markSeen($event)"
-          (deliver)="onDeliver($event)"
-          (cancel)="onCancel($event)"
-          (edit)="onEdit($event)"
-          [ngClass]="['card-variant', 'v' + ((i % 3) + 1)]">
-        </app-order-card>
+      <!-- WRAPPER con scroll vertical SOLO para las tarjetas -->
+      <div class="scroll-y">
+        <div class="grid-list">
+          <app-order-card
+            *ngFor="let o of filtered(); let i = index; trackBy: trackById"
+            [order]="o"
+            [isNew]="store.isNew(o.id)"
+            (seen)="store.markSeen($event)"
+            (deliver)="onDeliver($event)"
+            (cancel)="onCancel($event)"
+            (edit)="onEdit($event)"
+            [ngClass]="['card-variant', 'v' + ((i % 3) + 1)]">
+          </app-order-card>
+        </div>
       </div>
     </section>
   `,
   styles: [`
-    /* === Ajuste clave para scroll interno === */
+    /* ===== Contenedor general con scroll vertical interno abajo ===== */
     :host{
       display:block;
       height:100%;
-      min-height:0; /* permite que el hijo haga overflow */
+      min-height:0;
     }
 
     .orders{
       padding:16px;
-      /* 2 filas: header + contenedor scrolleable */
       display:grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto 1fr; /* header + lista */
       height:100%;
-      min-height:0; /* importante para que .grid-list pueda overflow: auto */
-      overflow:hidden; /* evita scroll aquí; lo concentra en .grid-list */
+      min-height:0;
+      overflow:hidden; /* sin scroll general aquí */
     }
 
-    /* ======= ESCRITORIO (igual que tenías) ======= */
+    /* ===== Header ===== */
     .header{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:12px;
-      gap:12px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-rows: auto auto; /* fila 1: título + + ; fila 2: categorías */
+      row-gap:10px;
+      margin-bottom:6px;
     }
-    .title-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    h1{ margin:0; font-size:22px; font-weight:700; color:var(--p-emphasis-high); }
 
-    /* Segmentación visual del SelectButton (tus estilos originales) */
+    .title-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between; /* título a la izq, + a la der */
+      gap:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      font-weight:700;
+      color:var(--p-emphasis-high);
+    }
+
+    .add-btn.p-button{
+      width:46px; height:46px; border-radius:9999px; padding:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      flex:0 0 auto;
+    }
+    .add-btn .p-button-icon{ margin:0 !important; }
+
+    /* ===== Categorías con SCROLL HORIZONTAL ===== */
+    .chips-scroll{
+      overflow-x:auto;           /* <- scroll horizontal */
+      overflow-y:hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;     /* Firefox */
+      padding-bottom: 2px;       /* evita cortar la sombra del control */
+    }
+
+    /* Hacemos que el control ocupe sólo su contenido y no se rompa en líneas */
     :host ::ng-deep p-selectbutton.state-filters .p-selectbutton{
-      display:inline-flex; gap:0; border-radius:999px; border:1px solid var(--p-surface-300); overflow:hidden;
+      display:inline-flex;
+      width:max-content;     /* que crezca por contenido */
+      white-space:nowrap;    /* sin salto de línea */
+      gap:0;
+      border-radius:999px;
+      border:1px solid var(--p-surface-300);
+      overflow:hidden;
       background:var(--p-surface-0);
     }
     :host ::ng-deep p-selectbutton.state-filters .p-button{
       border-radius:0; box-shadow:none; border:0; background:transparent; color:var(--p-emphasis-high);
       padding:0 .75rem; height:36px;
-      flex: 0 0 auto;
+      flex:0 0 auto;         /* no permitir que se estire */
+      white-space:nowrap;
     }
     :host ::ng-deep p-selectbutton.state-filters .p-button + .p-button{
       border-left: 1px solid var(--p-surface-300);
@@ -131,29 +169,20 @@ interface FilterOption {
     .opt{ display:flex; align-items:center; gap:.45rem; }
     .opt .count{ opacity:.85; font-weight:600; }
 
-    /* Botón + */
-    .add-btn.p-button{
-      width:46px; height:46px; border-radius:9999px; padding:0;
-      display:inline-flex; align-items:center; justify-content:center;
-    }
-    .add-btn .p-button-icon{ margin:0 !important; }
-
-    /* =================== LISTA CON MASONRY + SCROLL =================== */
-    .grid-list{
-      /* scroll solo aquí */
+    /* ===== Scroll vertical interno para tarjetas ===== */
+    .scroll-y{
       height:100%;
       min-height:0;
-      overflow:auto;
-
-      /* Masonry vertical -> horizontal */
-      display:block !important;     /* anula display:grid anterior */
-      column-count: 3;
-      column-gap: 16px;
-
-      padding-bottom: 12px; /* respiración inferior para botones */
+      overflow-y:auto;
+      overflow-x:hidden;
     }
 
-    /* Cada tarjeta se comporta como bloque "no cortable" dentro de las columnas */
+    /* ===== Tus columnas (masonry) se mantienen ===== */
+    .grid-list{
+      display:block !important;
+      column-count: 3;
+      column-gap: 16px;
+    }
     :host ::ng-deep .grid-list app-order-card{
       break-inside: avoid;
       display: inline-block;
@@ -161,7 +190,7 @@ interface FilterOption {
       margin: 0 0 16px 0;
     }
 
-    /* Responsive: 2 columnas en <=1200px, 1 columna en <=768px */
+    /* Breakpoints responsivos */
     @media (max-width: 1200px){
       .grid-list{ column-count: 2; }
     }
@@ -169,28 +198,14 @@ interface FilterOption {
       .grid-list{ column-count: 1; }
     }
 
-    /* ======= SOLO MÓVIL (≤ 640px) – conservando tu maquetación ======= */
+    /* Pequeñas mejoras en mobile */
     @media (max-width: 639.98px){
-      .header{
-        display:grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto auto;
-        align-items:center;
-        row-gap:8px;
-      }
-      .title-row{
-        grid-column: 1 / -1;
-        display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-      }
-      .add-btn{ grid-column: 2 / 3; }
-      :host ::ng-deep p-selectbutton.state-filters .p-selectbutton{
-        width:100%;
-      }
+      .orders{ padding:12px; }
+      h1{ font-size:20px; }
+      .add-btn.p-button{ width:42px; height:42px; }
     }
 
-    /* ============================================================
-       Variantes visuales por tarjeta (las que ya tenías)
-       ============================================================ */
+    /* Variantes de tarjeta: sin cambios */
     :host ::ng-deep app-order-card.card-variant.v1 .order-card{
       --card-bg: color-mix(in srgb, var(--p-primary-50, #f1ecff) 28%, var(--p-surface-0));
       --card-accent: color-mix(in srgb, var(--p-primary-color) 55%, transparent);
@@ -225,17 +240,14 @@ export class OrdersListComponent {
 
   constructor(public store: OrdersStore, private router: Router) {}
 
-  /** Acceso directo a la lista del store */
   orders = computed(() => this.store.orders());
 
-  /** Traducción de status del pedido a GroupKey (conserva tu status) */
   private toGroup(s: any): GroupKey {
     if (s === 'ENTREGADO') return 'ENTREGADO';
     if (s === 'CANCELADO') return 'CANCELADO';
     return 'PREPARACION';
   }
 
-  /** Contadores por grupo (manteniendo tu enfoque original con getCount) */
   private readonly countsMap = computed<Record<GroupKey, number>>(() => {
     const c: Record<GroupKey, number> = { PREPARACION: 0, ENTREGADO: 0, CANCELADO: 0 };
     for (const o of this.orders()) c[this.toGroup((o as any).status)]++;
@@ -243,7 +255,6 @@ export class OrdersListComponent {
   });
   getCount(g: GroupKey){ return this.countsMap()[g] ?? 0; }
 
-  /** Lista filtrada (misma idea que tenías) */
   readonly filtered = computed(() => {
     const active = new Set(this.selectedGroups());
     if (active.size === 0) return [];
