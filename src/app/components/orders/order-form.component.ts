@@ -101,6 +101,9 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
         [(visible)]="cartOpen"
         [items]="items()"
         [itemsCount]="itemsCount()"
+        [(customer)]="customer"
+        [(type)]="type"
+        [(table)]="table"
         (edit)="openEditModal($event)"
         (remove)="remove($event)"
         (cancel)="cancel()"
@@ -140,7 +143,7 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
       background:var(--p-surface-100); display:grid; place-items:center;
     }
     .prod-media .ph{ width:100%; height:100%; display:grid; place-items:center;
-      background:repeating-linear-gradient(45deg,var(--p-surface-100),var(--p-surface-100) 12px,var(--p-surface-200) 12px,var(--p-surface-200) 24px);
+      background:repeating-linear-gradient(45deg,var(--p-surface-100) 0px,var(--p-surface-100) 12px,var(--p-surface-200) 12px,var(--p-surface-200) 24px);
       color:var(--p-text-muted-color); font-size:1.25rem;
     }
     .prod-body{ padding:.5rem; display:grid; gap:.45rem; }
@@ -238,6 +241,7 @@ export class OrderFormComponent implements OnInit {
       this.modalInitialStatus = undefined;
     }
 
+    // re-montaje en el siguiente ciclo
     setTimeout(() => { this.showAddModal = true; }, 0);
   }
 
@@ -279,8 +283,6 @@ export class OrderFormComponent implements OnInit {
       this.showAddModal = false;
       this.selectedProduct = null;
       this.editingIndex = null;
-      this.modalShowStatus = false;
-      this.modalInitialStatus = undefined;
     }
   }
 
@@ -291,17 +293,19 @@ export class OrderFormComponent implements OnInit {
 
   @HostListener('window:resize') onResize(){}
 
-  /** ================== NUEVO: soporta edición desde query params ================== */
+  /** ================== soporta edición desde query params ================== */
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(qp => {
       const id = qp.get('edit');
-      const open = qp.get('openCart');
+      const open = qp.get('open') ?? qp.get('openCart');
+
+      this.editingOrderId.set(id);
 
       if (id) {
-        const order = this.store.getById(id);
+        const order = this.store.getById(id!);
         if (order) {
-          this.editingOrderId.set(id);
-          this.items.set(structuredClone(order.items || []));
+          // Precarga datos del pedido existente
+          this.items.set(order.items ?? []);
           this.customer = order.customer ?? '';
           this.type = order.type;
           this.table = this.type === 'MESA' ? (order.table ?? 1) : null;
