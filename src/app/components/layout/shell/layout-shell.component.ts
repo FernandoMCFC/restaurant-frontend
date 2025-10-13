@@ -20,51 +20,42 @@ import { UiStore } from '../ui.store';
       </div>
     </div>
   `,
-    
-    styles: [`
-      :host { display:block; }
+  styles: [`
+    :host { display:block; }
 
-      /* Fondo general gris (como Sakai) y sin scroll en el wrapper */
-      .shell {
-        height: 100vh;
-        overflow: hidden;
-        background: var(--p-surface-100);
-      }
+    /* Fondo general y sin scroll global */
+    .shell {
+      height: 100dvh;            /* mejor manejo en móviles que 100vh */
+      overflow: hidden;          /* bloquea scroll del wrapper */
+      background: var(--p-surface-100);
+    }
 
-      /* El cuerpo (zona derecha) es quien scrollea */
+    /* Cuerpo: ya NO scrollea (scroll vivirá en cada página interna) */
+    .shell-body {
+      height: calc(100dvh - 64px);  /* 64px = altura del topbar */
+      overflow: hidden;             /* ← antes era auto: aquí apagamos el scroll general */
+      padding-top: 16px;
+      padding-bottom: 16px;
+      padding-left: calc(280px + 32px);
+      padding-right: 0;
+      transition: padding-left .2s ease;
+      will-change: padding-left;
+      background: transparent;
+    }
+
+    .shell.sidebar-collapsed .shell-body {
+      padding-left: calc(72px + 32px);
+    }
+
+    @media (max-width: 991px) {
       .shell-body {
-        height: calc(100vh - 64px);          /* 64px = altura del topbar */
-        overflow: auto;                       /* scroll solo aquí */
-        /* ANTES: padding: 16px 16px 16px calc(280px + 32px) */
-        /* Ahora: sin padding horizontal derecho (full-width), conservando separación con sidebar a la izq */
         padding-top: 16px;
         padding-bottom: 16px;
-        padding-left: calc(280px + 32px);
-        padding-right: 0;                     /* ← sin margen lateral derecho */
-        transition: padding-left .2s ease;
-        will-change: padding-left;
-        background: transparent;
+        padding-left: 0;
+        padding-right: 0;
       }
-
-      .shell.sidebar-collapsed .shell-body {
-        /* ANTES: padding-left: calc(72px + 32px) */
-        padding-left: calc(72px + 32px);      /* mantenemos la misma separación cuando la barra está colapsada */
-      }
-
-      @media (max-width: 991px) {
-        .shell-body {
-          /* ANTES: padding: 16px;  → eso metía margen a izquierda y derecha en móvil */
-          /* Ahora: pegado al borde en móvil (0 horizontal), dejando respiración solo vertical */
-          padding-top: 16px;
-          padding-bottom: 16px;
-          padding-left: 0;    /* ← sin margen lateral izq en móvil */
-          padding-right: 0;   /* ← sin margen lateral der en móvil */
-        }
-      }
-    `]
-
-
-
+    }
+  `]
 })
 export class LayoutShellComponent implements OnInit {
   private store = inject(UiStore);
