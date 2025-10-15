@@ -14,28 +14,25 @@ import { RouterOutlet } from '@angular/router';
     </main>
   `,
   styles: [`
-  /* === Mantiene tu diseño, pero habilita alto y overflow para scroll interno en hijos === */
+  
   :host { 
     display:block; 
-    height:100%;       /* clave */
-    min-height:0;      /* clave */
+    height:100%;
+    min-height:0;
   }
 
   .content {
     background: transparent;
     width: 100%;
     margin: 0;
-
-    /* NUEVO: que ocupe el alto, sin permitir scroll global aquí */
     display: flex;
     flex-direction: column;
-    height: 100%;      /* clave */
-    min-height: 0;     /* clave */
-    overflow: hidden;  /* delega el scroll al contenido hijo */
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .content-inner {
-    /* conservamos tu grid y estilos visuales */
     display: grid;
     gap: 1rem;
     background: var(--p-surface-0);
@@ -43,27 +40,31 @@ import { RouterOutlet } from '@angular/router';
     border-radius: 12px;
     box-shadow: var(--p-shadow-1);
 
-    /* paddings iguales a tu archivo */
-    padding-top: 1rem;
+    
+    padding-top: 0;
     padding-bottom: 1rem;
     padding-left: 0;
     padding-right: 0;
 
-    /* NUEVO: permitir que el hijo (Orders) maneje scroll interno */
-    height: 100%;      /* clave */
-    min-height: 0;     /* clave */
-    overflow: hidden;  /* el hijo decide dónde scrollear */
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  
+  router-outlet {
+    display: contents;
   }
 
   @media (min-width: 992px) {
     .content-inner {
-      padding-top: 1.25rem;
+      padding-top: 0;          
       padding-bottom: 1.25rem;
       padding-left: 0;
       padding-right: 0;
       gap: 1.25rem;
     }
   }
-`]
+  `]
 })
 export class ContentComponent {}
