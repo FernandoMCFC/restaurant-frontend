@@ -143,7 +143,7 @@ export type OrderItem = { id: string; name: string; qty: number; price: number }
             </div>
           </div>
 
-          <!-- Vacío -->
+          <!-- Vacio -->
           <div class="cd-empty" *ngIf="itemsLength === 0">
             <i class="pi pi-shopping-cart" style="font-size: 1.25rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
             <p>No hay productos en el pedido</p>
