@@ -1,3 +1,4 @@
+// src/app/components/orders/order-form.component.ts
 import { Component, HostListener, ViewEncapsulation, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +19,6 @@ import { ProductAddComponent } from './product-add.component';
 import { CartDrawerComponent } from './cart-drawer.component';
 
 type Category = { key: string; label: string; productIds: string[] };
-// Catálogo visual NO necesita itemStatus/notes
 type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string; imageUrl?: string };
 
 @Component({
@@ -26,7 +26,6 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
   standalone: true,
   encapsulation: ViewEncapsulation.None,
   imports: [
-    /* 👇 añadimos los directives standalone para quitar advertencias */
     CommonModule, NgIf, NgForOf,
     FormsModule,
     ButtonModule, CardModule, DrawerModule, OverlayBadgeModule, TableModule, DividerModule, ToolbarModule,
@@ -34,27 +33,35 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
   ],
   template: `
     <div class="page">
-      <!-- Header -->
-      <div class="topbar">
-        <h1>{{ editingOrderId() ? 'Editar Pedido' : 'Nuevo Pedido' }}</h1>
-        <p-overlaybadge [value]="itemsCount()" severity="info" styleClass="cart-badge">
-          <button pButton class="p-button-rounded p-button-text cart-btn"
-                  icon="pi pi-shopping-cart"
-                  (click)="toggleCart(true)"
-                  aria-label="Resumen de pedido"></button>
-        </p-overlaybadge>
-      </div>
+      <!-- Header (alineado al de Orders) -->
+      <header class="header">
+        <div class="title-line">
+          <div class="title-left">
+            <span class="title-icon pi pi-list-check" aria-hidden="true"></span>
+            <h1>{{ editingOrderId() ? 'Editar Pedido' : 'Nuevo Pedido' }}</h1>
+          </div>
 
-      <!-- Categorías -->
-      <div class="cats">
-        <a *ngFor="let c of categories"
-           (click)="setActive(c.key)"
-           [class.active]="activeKey() === c.key">{{ c.label }}</a>
+          <p-overlaybadge [value]="itemsCount()" severity="info" styleClass="cart-badge">
+            <button pButton class="p-button-rounded p-button-text cart-btn"
+                    icon="pi pi-shopping-cart"
+                    (click)="toggleCart(true)"
+                    aria-label="Resumen de pedido"></button>
+          </p-overlaybadge>
+        </div>
+      </header>
+
+      <!-- Categorías (scroll visible igual a orders-list) -->
+      <div class="cats-scroll">
+        <div class="cats-container">
+          <a *ngFor="let c of categories"
+             (click)="setActive(c.key)"
+             [class.active]="activeKey() === c.key">{{ c.label }}</a>
+        </div>
       </div>
       <div class="sep"></div>
 
-      <!-- Grid productos -->
-      <div class="list-area">
+      <!-- Grid productos CON SCROLL -->
+      <div class="products-scroll-container">
         <div class="grid">
           <div class="product-card" *ngFor="let p of currentProducts()">
             <p-card>
@@ -83,7 +90,7 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
         </div>
       </div>
 
-      <!-- Modal agregar/editar (se crea y destruye en cada apertura) -->
+      <!-- Modal agregar/editar -->
       <ng-container *ngIf="showAddModal">
         <app-product-add
           [visible]="true"
@@ -96,7 +103,7 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
         </app-product-add>
       </ng-container>
 
-      <!-- Drawer carrito -->
+      <!-- Drawer carrito (igual que antes) -->
       <app-cart-drawer
         [(visible)]="cartOpen"
         [items]="items()"
@@ -114,35 +121,123 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
   styles: [`
     :host{ display:block; overflow-x:hidden; }
 
+    /* === Layout con fila scrolleable interna === */
     .page{
-      display:grid; grid-template-rows:auto auto 1px auto; gap:.5rem;
-      padding: 0 12px 12px; box-sizing:border-box;
+      display:grid;
+      grid-template-rows: auto auto 1px 1fr; /* header, categorías, separador, productos (scrolleable) */
+      gap:.5rem;
+      height: 100vh;
+      padding:16px;
+      box-sizing:border-box;
     }
+    @media (max-width:639.98px){ .page{ padding:12px; } }
 
-    .topbar{ display:flex; align-items:center; justify-content:space-between; }
-    .topbar h1{ margin:0; font-size:22px; font-weight:700; line-height:1.1; }
+    /* ===== Header ===== */
+    .header{ margin-bottom:4px; }
+    .title-line{
+      display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+      position:relative; padding-bottom:.25rem;
+    }
+    .title-line::after{
+      content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
+      background: linear-gradient(90deg, var(--p-surface-300), transparent 60%);
+    }
+    .title-left{ display:flex; align-items:center; gap:.75rem; min-height:48px; }
+    .title-icon{
+      width:34px; height:34px; border-radius:10px;
+      display:inline-flex; align-items:center; justify-content:center;
+      background: var(--p-surface-100); color: var(--p-primary-600);
+      border:1px solid var(--p-surface-300); box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      font-size:1rem;
+    }
+    h1{ margin:0; line-height:1; font-size:24px; font-weight:800; letter-spacing:.2px; color:var(--p-emphasis-high); }
+
     .cart-btn{ font-size:1.4rem; }
     .cart-badge .p-badge{
-      background: var(--p-primary-color) !important; color: var(--p-primary-contrast-color) !important;
-      min-width: 1.25rem; height: 1.25rem; font-size:.75rem; font-weight:700; transform: translate(2px,-2px);
+      background: var(--p-primary-color) !important;
+      color: var(--p-primary-contrast-color) !important;
+      min-width: 1.25rem; height: 1.25rem; font-size:.75rem; font-weight:700;
+      transform: none;
+      border: 2px solid var(--p-surface-0);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.02), 0 2px 6px rgba(0,0,0,.15);
+      z-index: 1;
     }
 
-    .cats{ display:flex; gap:12px; overflow-x:auto; padding:6px 0 8px; }
-    .cats a{ white-space:nowrap; font-weight:700; color:var(--p-emphasis-medium); text-decoration:none; padding:0 2px 6px; }
-    .cats a.active{ color:var(--p-primary-color); border-bottom:2px solid var(--p-primary-color); }
+    /* ===== Categorías ===== */
+    .cats-scroll{
+      overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+      padding:4px 4px 12px 4px;
+      margin:0 -4px;
+    }
+    .cats-container{ display:flex; gap:12px; padding:4px; min-width:min-content; }
+
+    .cats-container a{
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.5rem .9rem;
+      border-radius:999px;
+      border:1.5px solid var(--p-surface-300);
+      background: var(--p-surface-0);
+      color: var(--p-emphasis-medium);
+      font-weight:700; letter-spacing:.2px;
+      text-decoration:none; white-space:nowrap;
+      user-select:none; cursor:pointer;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
+    }
+    .cats-container a:hover{
+      transform: translateY(-1px);
+      border-color: var(--p-primary-300);
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      color: var(--p-emphasis-high);
+    }
+    .cats-container a.active{
+      background: linear-gradient(180deg, var(--p-primary-50), var(--p-primary-100));
+      color: var(--p-primary-800);
+      border-color: var(--p-primary-400);
+      box-shadow: 0 4px 14px rgba(0,0,0,.10), 0 2px 0 rgba(0,0,0,.02) inset;
+    }
+
     .sep{ height:1px; background:var(--p-surface-200); margin:0 0 6px; }
 
-    .list-area{ overflow:visible; }
-    .grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.75rem; width:100%; }
+    /* ===== Contenedor con scroll para productos ===== */
+    .products-scroll-container{
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding-right:4px;
+      padding-bottom:16px;
+      scroll-padding-bottom:16px;
+    }
+    .products-scroll-container::-webkit-scrollbar{ width:6px; }
+    .products-scroll-container::-webkit-scrollbar-track{ background: var(--p-surface-100); border-radius:3px; }
+    .products-scroll-container::-webkit-scrollbar-thumb{ background: var(--p-surface-300); border-radius:3px; }
+    .products-scroll-container::-webkit-scrollbar-thumb:hover{ background: var(--p-surface-400); }
+
+    /* ===== Grid de productos ===== */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:.75rem;
+      width:100%;
+    }
+    .grid::after{
+      content:"";
+      height: calc(80px + env(safe-area-inset-bottom, 0px));
+      grid-column: 1 / -1;
+    }
+    @media (min-width: 768px){ .grid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
     @media (min-width: 1200px){ .grid{ grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
     .product-card, .product-card *{ min-width:0; }
+    .product-card .p-card{ height:100%; }
 
     .card-pad{ padding:.5rem .5rem 0 .5rem; }
     .prod-media{
       width:100%; aspect-ratio:4/3; border-radius:var(--p-border-radius); overflow:hidden;
       background:var(--p-surface-100); display:grid; place-items:center;
     }
-    .prod-media .ph{ width:100%; height:100%; display:grid; place-items:center;
+    .prod-media .ph{
+      width:100%; height:100%; display:grid; place-items:center;
       background:repeating-linear-gradient(45deg,var(--p-surface-100) 0px,var(--p-surface-100) 12px,var(--p-surface-200) 12px,var(--p-surface-200) 24px);
       color:var(--p-text-muted-color); font-size:1.25rem;
     }
@@ -152,6 +247,23 @@ type Product = Omit<OrderItem, 'itemStatus' | 'notes'> & { description?: string;
     .prod-price{ font-weight:700; }
 
     .add-btn.p-button{ width:40px; height:40px; border-radius:9999px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+
+    /* ===== MOBILE: tarjetas pegadas a los bordes laterales ===== */
+    @media (max-width: 639.98px){
+      /* Hacemos bleed lateral del contenedor para compensar el padding de .page (12px) */
+      .products-scroll-container{
+        margin-left:-12px;
+        margin-right:-12px;
+        padding-left:0;
+        padding-right:0;
+      }
+      .grid{
+        grid-template-columns: repeat(2, 1fr);
+        gap:6px; /* separación mínima entre tarjetas */
+      }
+      /* Evitar márgenes colapsados de la tarjeta */
+      .product-card{ margin:0; }
+    }
   `]
 })
 export class OrderFormComponent implements OnInit {
@@ -162,26 +274,43 @@ export class OrderFormComponent implements OnInit {
   /** ID si estamos editando */
   editingOrderId = signal<string | null>(null);
 
-  /** Catálogo demo */
+  /** Catálogo demo - 8 por categoría */
   allProducts: Product[] = [
-    { id: 'sopa-mani',  name: 'Sopa de Maní',    qty: 1, price: 8 },
-    { id: 'sopa-fideo', name: 'Sopa de Fideo',   qty: 1, price: 15 },
-    { id: 'sopa-verd',  name: 'Sopa de Verduras',qty: 1, price: 16 },
-    { id: 'sopa-crema', name: 'Crema de Zapallo',qty: 1, price: 17 },
-    { id: 'mini-coca',  name: 'Mini Coca',       qty: 1, price: 8  },
-    { id: 'coca-2l',    name: 'Coca 2lt',        qty: 1, price: 18 },
-    { id: 'sprite-600', name: 'Sprite 600ml',    qty: 1, price: 9  },
-    { id: 'agua-600',   name: 'Agua 600ml',      qty: 1, price: 7  },
-    { id: 'bife',       name: 'Bife de Chorizo', qty: 1, price: 55 },
-    { id: 'tira',       name: 'Asado de Tira',   qty: 1, price: 48 },
+    // SOPAS - 8
+    { id: 'sopa-mani',  name: 'Sopa de Maní',        qty: 1, price: 8 },
+    { id: 'sopa-fideo', name: 'Sopa de Fideo',       qty: 1, price: 15 },
+    { id: 'sopa-verd',  name: 'Sopa de Verduras',    qty: 1, price: 16 },
+    { id: 'sopa-crema', name: 'Crema de Zapallo',    qty: 1, price: 17 },
+    { id: 'sopa-tomate', name: 'Crema de Tomate',    qty: 1, price: 18 },
+    { id: 'sopa-cebolla', name: 'Sopa de Cebolla',   qty: 1, price: 14 },
+    { id: 'sopa-lentejas', name: 'Sopa de Lentejas', qty: 1, price: 16 },
+    { id: 'sopa-pollo', name: 'Caldo de Pollo',      qty: 1, price: 15 },
+
+    // BEBIDAS - 8
+    { id: 'mini-coca',  name: 'Mini Coca',           qty: 1, price: 8  },
+    { id: 'coca-2l',    name: 'Coca 2lt',            qty: 1, price: 18 },
+    { id: 'sprite-600', name: 'Sprite 600ml',        qty: 1, price: 9  },
+    { id: 'agua-600',   name: 'Agua 600ml',          qty: 1, price: 7  },
+    { id: 'fanta-600',  name: 'Fanta 600ml',         qty: 1, price: 9  },
+    { id: 'jugo-naranja', name: 'Jugo de Naranja',   qty: 1, price: 12 },
+    { id: 'limonada',   name: 'Limonada Natural',    qty: 1, price: 10 },
+    { id: 'cafe',       name: 'Café Americano',      qty: 1, price: 8 },
+
+    // PARRILLA - 8
+    { id: 'bife',       name: 'Bife de Chorizo',     qty: 1, price: 55 },
+    { id: 'tira',       name: 'Asado de Tira',       qty: 1, price: 48 },
     { id: 'pollo',      name: 'Pechuga a la Parrilla', qty: 1, price: 36 },
-    { id: 'chori',      name: 'Chorizo',         qty: 1, price: 15 },
+    { id: 'chori',      name: 'Chorizo',             qty: 1, price: 15 },
+    { id: 'costilla',   name: 'Costilla de Cerdo',   qty: 1, price: 42 },
+    { id: 'lomo',       name: 'Lomo de Res',         qty: 1, price: 60 },
+    { id: 'picanha',    name: 'Picanha',             qty: 1, price: 52 },
+    { id: 'salchichas', name: 'Salchichas Parrilleras', qty: 1, price: 18 },
   ];
 
   categories: Category[] = [
-    { key: 'SOPAS',    label: 'SOPAS',    productIds: ['sopa-mani','sopa-fideo','sopa-verd','sopa-crema'] },
-    { key: 'BEBIDAS',  label: 'BEBIDAS',  productIds: ['mini-coca','coca-2l','sprite-600','agua-600'] },
-    { key: 'PARRILLA', label: 'PARRILLA', productIds: ['bife','tira','pollo','chori'] },
+    { key: 'SOPAS',    label: 'SOPAS',    productIds: ['sopa-mani','sopa-fideo','sopa-verd','sopa-crema','sopa-tomate','sopa-cebolla','sopa-lentejas','sopa-pollo'] },
+    { key: 'BEBIDAS',  label: 'BEBIDAS',  productIds: ['mini-coca','coca-2l','sprite-600','agua-600','fanta-600','jugo-naranja','limonada','cafe'] },
+    { key: 'PARRILLA', label: 'PARRILLA', productIds: ['bife','tira','pollo','chori','costilla','lomo','picanha','salchichas'] },
   ];
 
   activeKey = signal<string>(this.categories[0].key);
@@ -197,13 +326,6 @@ export class OrderFormComponent implements OnInit {
   toggleCart(v: boolean){ this.cartOpen = v; }
   total(){ return this.items().reduce((acc, it) => acc + it.qty * it.price, 0); }
 
-  addItem(p: Product){
-    const l = [...this.items()];
-    const i = l.findIndex(x => x.id === p.id);
-    if (i >= 0) l[i] = { ...l[i], qty: l[i].qty + 1 };
-    else l.push({ id: p.id, name: p.name, qty: 1, price: p.price, notes: '', itemStatus: 'EN_PREPARACION' });
-    this.items.set(l);
-  }
   private addItemWithQty(p: Product, qty: number){
     const l = [...this.items()];
     const i = l.findIndex(x => x.id === p.id);
@@ -226,7 +348,6 @@ export class OrderFormComponent implements OnInit {
   modalShowStatus = false;
   modalInitialStatus: ItemStatus | undefined = undefined;
 
-  /** Fuerza re-montar el modal para que SIEMPRE se abra */
   private mountModal(product: Product, qty: number, editIndex: number | null){
     this.showAddModal = false;
     this.selectedProduct = { ...product };
@@ -240,8 +361,6 @@ export class OrderFormComponent implements OnInit {
       this.modalShowStatus = false;
       this.modalInitialStatus = undefined;
     }
-
-    // re-montaje en el siguiente ciclo
     setTimeout(() => { this.showAddModal = true; }, 0);
   }
 
@@ -275,9 +394,7 @@ export class OrderFormComponent implements OnInit {
     }
 
     this.showAddModal = false;
-    this.selectedProduct = null;
-  }
-
+    }
   handleModalVisible(v: boolean){
     if (!v) {
       this.showAddModal = false;
@@ -286,14 +403,13 @@ export class OrderFormComponent implements OnInit {
     }
   }
 
-  /* Pedido para guardar en OrdersStore */
+  /* Pedido */
   customer = '';
   type: 'MESA' | 'LLEVAR' = 'MESA';
   table: number | null = 1;
 
   @HostListener('window:resize') onResize(){}
 
-  /** ================== soporta edición desde query params ================== */
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(qp => {
       const id = qp.get('edit');
@@ -304,7 +420,6 @@ export class OrderFormComponent implements OnInit {
       if (id) {
         const order = this.store.getById(id!);
         if (order) {
-          // Precarga datos del pedido existente
           this.items.set(order.items ?? []);
           this.customer = order.customer ?? '';
           this.type = order.type;
@@ -326,10 +441,8 @@ export class OrderFormComponent implements OnInit {
 
     const editId = this.editingOrderId();
     if (editId) {
-      // Actualizar pedido existente
       this.store.updateOrder(editId, payload as any);
     } else {
-      // Crear nuevo pedido (comportamiento original)
       this.store.addOrder(payload as any);
     }
 
