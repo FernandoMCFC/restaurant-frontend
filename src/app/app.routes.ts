@@ -20,6 +20,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => Promise.resolve(DashboardPage) },
       { path: 'settings',  loadComponent: () => Promise.resolve(RestaurantSettingsPage) },
       { path: 'orders', loadComponent: () => import('./pages/orders/orders-list.page').then(m => m.OrdersListPage)},
+      { path: 'products', loadComponent: () => import('./pages/products/products.page').then(m => m.ProductsPage) },
       { path: 'orders/new', loadComponent: () => import('./pages/orders/order-form.page').then(m => m.OrderFormPage)},
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],

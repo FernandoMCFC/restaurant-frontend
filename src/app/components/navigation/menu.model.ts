@@ -21,7 +21,8 @@ export const APP_MENU_GROUPS: AppMenuGroup[] = [
     label: 'RESTAURANT',
     items: [
       { label: 'Configuración', icon: 'pi pi-cog',  route: '/settings' },
-      { label: 'Pedidos',       icon: 'pi pi-shopping-bag', route: '/orders' }
+      { label: 'Pedidos',       icon: 'pi pi-shopping-bag', route: '/orders' },
+      { label: 'Productos',     icon: 'pi pi-box', route: '/products' }
     ]
   }
 ];
