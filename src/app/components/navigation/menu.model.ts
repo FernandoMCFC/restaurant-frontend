@@ -22,7 +22,8 @@ export const APP_MENU_GROUPS: AppMenuGroup[] = [
     items: [
       { label: 'Configuración', icon: 'pi pi-cog',  route: '/settings' },
       { label: 'Pedidos',       icon: 'pi pi-shopping-bag', route: '/orders' },
-      { label: 'Productos',     icon: 'pi pi-box', route: '/products' }
+      { label: 'Productos',     icon: 'pi pi-box', route: '/products' },
+      { label: 'Categorías',    icon: 'pi pi-tags', route: '/categories' },
     ]
   }
 ];
