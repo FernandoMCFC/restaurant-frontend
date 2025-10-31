@@ -22,7 +22,8 @@ export const routes: Routes = [
       { path: 'orders', loadComponent: () => import('./pages/orders/orders-list.page').then(m => m.OrdersListPage)},
       { path: 'products', loadComponent: () => import('./pages/products/products.page').then(m => m.ProductsPage) },
       { path: 'orders/new', loadComponent: () => import('./pages/orders/order-form.page').then(m => m.OrderFormPage)},
-      // { path: 'categories', loadComponent: () => import('./pages/categories/categories.page').then(m => m.CategoriesPage) },
+      { path: 'products/categories', loadComponent: () => import('./pages/categories/categories.page').then(m => m.CategoriesPage),},
+
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

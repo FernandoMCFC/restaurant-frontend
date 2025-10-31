@@ -1,7 +1,8 @@
 export type AppMenuItem = {
   label: string;
   icon: string;
-  route: string;
+  route?: string;
+  children?: AppMenuItem[];
 };
 
 export type AppMenuGroup = {
@@ -22,8 +23,14 @@ export const APP_MENU_GROUPS: AppMenuGroup[] = [
     items: [
       { label: 'Configuración', icon: 'pi pi-cog',  route: '/settings' },
       { label: 'Pedidos',       icon: 'pi pi-shopping-bag', route: '/orders' },
-      { label: 'Productos',     icon: 'pi pi-box', route: '/products' },
-      { label: 'Categorías',    icon: 'pi pi-tags', route: '/categories' },
+      {
+        label: 'Productos',
+        icon: 'pi pi-box',
+        children: [
+          { label: 'Ver productos', icon: 'pi pi-list', route: '/products' },
+          { label: 'Categorías', icon: 'pi pi-tags', route: '/products/categories' }
+        ]
+      },
     ]
   }
 ];
