@@ -1,10 +1,19 @@
 // src/app/pages/products/products.page.ts
-import { Component, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 
+/* PrimeNG v20 */
+import { DividerModule } from 'primeng/divider';
+
 import { ProductsStore } from './products.store';
+import type { Product } from './products.types';
+
 import { ProductFormComponent } from '../../components/products/product-form.component';
+import { ProductsHeaderComponent } from '../../components/products/products-header.component';
+import { ProductsListComponent } from '../../components/products/products-list.component';
+
+type Mode = 'list' | 'add' | 'edit';
 
 @Component({
   standalone: true,
@@ -12,96 +21,83 @@ import { ProductFormComponent } from '../../components/products/product-form.com
   encapsulation: ViewEncapsulation.None,
   imports: [
     CommonModule,
-    HttpClientModule,          // proveedor para HttpClient
+    HttpClientModule,
+    DividerModule,
+    ProductsHeaderComponent,
+    ProductsListComponent,
     ProductFormComponent
   ],
   template: `
-    <section class="products-page">
-      <!-- HEAD -->
-      <header class="head">
-        <div class="head-inner">
-          <h2 class="title">Productos</h2>
-          <p class="subtitle">Registra nuevos productos para tu restaurante.</p>
-          <div *ngIf="showSaved" class="toast ok">Producto guardado.</div>
-        </div>
-      </header>
+    <section class="page">
+      <!-- HEADER -->
+      <app-products-header
+        [title]="'Productos'"
+        [subtitle]="mode() === 'list' ? 'Administra tus productos' : (mode() === 'add' ? 'Nuevo producto' : 'Editar producto')"
+        [mode]="mode()"
+        (addClick)="openAdd()"
+        (backClick)="backToList()"
+      ></app-products-header>
 
-      <!-- BODY (scroll solo aquí) -->
-      <div class="body">
+      <!-- BODY -->
+      <div class="body" *ngIf="mode() === 'list'">
+        <app-products-list
+          (edit)="openEdit($event)"
+          (remove)="onRemove($event)"
+        ></app-products-list>
+      </div>
+
+      <div class="body" *ngIf="mode() !== 'list'">
         <app-product-form
           [categories]="store.categories()"
+          [model]="editing() ?? undefined"
           (save)="onSave($event)">
         </app-product-form>
       </div>
     </section>
   `,
   styles: [`
-    :host{ display:block; height:100%; }
-
-    /* Layout principal */
-    .products-page{
-      display:flex;
-      flex-direction:column;
-      height:100%;
-      min-height:0;          /* permite que el hijo con overflow funcione */
-      background: transparent;
+    :host{ display:block; }
+    .page{
+      display:flex; flex-direction:column;
+      gap:.5rem; height:100%;
+      padding: .35rem;
     }
-
-    /* HEAD */
-    .head{
-      flex:0 0 auto;
-      border-bottom: 1px solid var(--p-surface-200);
-      background: var(--p-surface-0);
-    }
-    .head-inner{
-      padding: 1rem;
-      display:flex;
-      flex-direction:column;
-      gap:.25rem;
-    }
-    .title{
-      margin:0; font-weight:700;
-      font-size: clamp(1.15rem, 2vw, 1.35rem);
-      color: var(--p-surface-900);
-    }
-    .subtitle{
-      margin:0; color: var(--p-surface-600);
-      font-size: .95rem;
-    }
-
-    .toast{
-      margin-top: .5rem;
-      padding: .5rem .75rem;
-      border-radius: .625rem;
-      border: 1px solid var(--p-surface-200);
-      background: var(--p-primary-50);
-      color: var(--p-primary-700);
-      display:inline-block;
-    }
-    .toast.ok{ border-color: var(--p-primary-200); }
-
-    /* BODY con scroll interno */
     .body{
-      flex:1 1 auto;
-      min-height:0;          /* imprescindible para que overflow funcione dentro de un flex container */
-      overflow: auto;        /* ⬅️ scroll sólo aquí */
-      padding: 1rem;
-      background: transparent;
+      background: var(--p-surface-0);
+      border: 1px solid var(--p-surface-200);
+      border-radius: .75rem;
+      padding: .85rem;
+      min-height: 240px;
     }
 
-    @media (max-width: 768px){
-      .head-inner{ padding: .85rem; }
+    @media (min-width: 1024px){
+      .page{ padding:.65rem; gap:.65rem; }
       .body{ padding: .85rem; }
     }
   `]
 })
 export class ProductsPage {
   store = inject(ProductsStore);
-  showSaved = false;
 
-  onSave(product: any){
-    this.store.add(product);
-    this.showSaved = true;
-    setTimeout(() => this.showSaved = false, 1800);
+  // UI state
+  mode = signal<Mode>('list');
+  editing = signal<Product | null>(null);
+
+  openAdd(){ this.editing.set(null); this.mode.set('add'); }
+  openEdit(item: Product){ this.editing.set(item); this.mode.set('edit'); }
+  backToList(){ this.mode.set('list'); this.editing.set(null); }
+
+  onSave(data: Omit<Product,'id'>){
+    const current = this.editing();
+    if (current) {
+      this.store.update(current.id, data);
+    } else {
+      this.store.add(data);
+    }
+    this.backToList();
+  }
+
+  onRemove(id: string){
+    this.store.remove(id);
   }
 }
