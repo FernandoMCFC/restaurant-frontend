@@ -1,4 +1,3 @@
-
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -29,12 +28,27 @@ import { FormsModule } from '@angular/forms';
         </div>
       </div>
 
-      <!-- Botones debajo del subtítulo -->
+      <!-- Botones debajo -->
       <div class="btn-row">
-        <button pButton type="button" label="Agregar" icon="pi pi-plus"
-                class="p-button-sm" (click)="addClick.emit()" pRipple></button>
-        <button pButton type="button" label="Ordenar" icon="pi pi-sort"
-                class="p-button-sm p-button-secondary" (click)="orderClick.emit()" pRipple></button>
+        <button
+          pButton
+          type="button"
+          label="Agregar"
+          icon="pi pi-plus"
+          class="btn-primary"
+          (click)="addClick.emit()"
+          pRipple>
+        </button>
+
+        <button
+          pButton
+          type="button"
+          label="Ordenar"
+          icon="pi pi-sort"
+          class="btn-secondary p-button-secondary"
+          (click)="orderClick.emit()"
+          pRipple>
+        </button>
       </div>
     </header>
   `,
@@ -42,60 +56,120 @@ import { FormsModule } from '@angular/forms';
     :host{ display:block; }
 
     .cats-head{
-      display:flex; flex-direction:column;
-      gap:.4rem; padding:.25rem .25rem .5rem;
+      display:flex;
+      flex-direction:column;
+      gap:.4rem;
+      padding:.25rem .25rem .5rem;
     }
 
-    .title{ margin:0; font-size:1.25rem; font-weight:700; line-height:1.2; }
+    .title{
+      margin:0;
+      font-size:1.25rem;
+      font-weight:700;
+      line-height:1.2;
+    }
 
     .subline{
-      display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
     }
-    .subtitle{ margin:0; color: var(--p-text-muted-color); }
 
-    /* Chip + Toggle mejorado */
+    .subtitle{
+      margin:0;
+      color: var(--p-text-muted-color);
+    }
+
+    /* Chip + Toggle */
     .switch{
-      display:flex; align-items:center; gap:.5rem;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
       padding:.25rem .6rem;
       background: color-mix(in oklab, var(--p-surface-100) 65%, var(--p-surface-0));
       border:1px solid var(--p-surface-200);
       border-radius: 999px;
       white-space: nowrap;
     }
+
     .lbl{
       color: var(--p-text-color);
       font-weight:700;
       letter-spacing:.2px;
     }
 
-    /* Estilo interno del ToggleSwitch (PrimeNG) */
+    /* Estilo interno */
     :host ::ng-deep .switch .p-toggleswitch{
-      width: 46px; height: 26px; position: relative;
+      width: 46px;
+      height: 26px;
+      position: relative;
     }
+
     :host ::ng-deep .switch .p-toggleswitch-slider{
-      width:100%; height:100%;
+      width:100%;
+      height:100%;
       border-radius: 999px;
       background: var(--p-surface-300);
       transition: background .18s ease;
     }
+
     :host ::ng-deep .switch .p-toggleswitch-handle{
-      position:absolute; top:2px; left:2px;
-      width:22px; height:22px; border-radius:50%;
+      position:absolute;
+      top:2px;
+      left:2px;
+      width:22px;
+      height:22px;
+      border-radius:50%;
       background: var(--p-surface-0);
       box-shadow: 0 1px 2px rgba(0,0,0,.15);
       transition: transform .18s ease;
     }
+
     :host ::ng-deep .switch .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider{
       background: var(--p-primary-color);
     }
+
     :host ::ng-deep .switch .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle{
       transform: translateX(20px);
     }
 
-    .btn-row{ display:flex; gap:.5rem; align-items:center; margin-top:.25rem; }
+    .btn-row{
+      display:flex;
+      gap:.5rem;
+      align-items:center;
+      margin-top:.25rem;
+      flex-wrap:wrap;
+    }
+
+    /* Botones pill  */
+    :host ::ng-deep .btn-primary{
+      min-height: 2.4rem;
+      padding-inline: 1.25rem;
+      border-radius: 999px;
+      font-size:.9rem;
+      font-weight:600;
+    }
+
+    :host ::ng-deep .btn-secondary{
+      min-height: 2.4rem;
+      padding-inline: 1.15rem;
+      border-radius: 999px;
+      font-size:.9rem;
+      font-weight:600;
+    }
+
+    :host ::ng-deep .btn-primary .p-button-label,
+    :host ::ng-deep .btn-secondary .p-button-label{
+      padding-inline:.7rem;
+    }
 
     @media (max-width:768px){
-      .subline{ flex-direction:column; align-items:flex-start; gap:.25rem; }
+      .subline{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:.25rem;
+      }
       .switch{ align-self:flex-start; }
       .btn-row{ flex-wrap:wrap; }
     }
@@ -105,7 +179,6 @@ export class CategoriesHeaderComponent {
   @Input() title = 'Categorías';
   @Input() subtitle = 'Listado de categorías registradas.';
 
-  
   @Input() active = true;
   @Output() activeChange = new EventEmitter<boolean>();
 

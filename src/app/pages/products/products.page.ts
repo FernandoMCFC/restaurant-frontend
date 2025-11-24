@@ -1,103 +1,162 @@
 // src/app/pages/products/products.page.ts
-import { Component, ViewEncapsulation, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 
 /* PrimeNG v20 */
-import { DividerModule } from 'primeng/divider';
+import { DialogModule } from 'primeng/dialog';
 
 import { ProductsStore } from './products.store';
-import type { Product } from './products.types';
+import type { Product, ProductCategory } from './products.types';
+import { CategoriesStore } from '../categories/categories.store';
 
 import { ProductFormComponent } from '../../components/products/product-form.component';
 import { ProductsHeaderComponent } from '../../components/products/products-header.component';
 import { ProductsListComponent } from '../../components/products/products-list.component';
 
-type Mode = 'list' | 'add' | 'edit';
-
 @Component({
-  standalone: true,
   selector: 'app-products-page',
-  encapsulation: ViewEncapsulation.None,
+  standalone: true,
   imports: [
     CommonModule,
     HttpClientModule,
-    DividerModule,
+    DialogModule,
     ProductsHeaderComponent,
     ProductsListComponent,
-    ProductFormComponent
+    ProductFormComponent,
   ],
   template: `
-    <section class="page">
-      <!-- HEADER -->
+    <section class="products-page">
       <app-products-header
         [title]="'Productos'"
-        [subtitle]="mode() === 'list' ? 'Administra tus productos' : (mode() === 'add' ? 'Nuevo producto' : 'Editar producto')"
-        [mode]="mode()"
+        [subtitle]="'Administra tus productos.'"
+        [active]="active()"
+        (activeChange)="onActiveChange($event)"
         (addClick)="openAdd()"
-        (backClick)="backToList()"
       ></app-products-header>
 
-      <!-- BODY -->
-      <div class="body" *ngIf="mode() === 'list'">
+      <div class="body">
         <app-products-list
+          [showUnavailable]="showUnavailable()"
           (edit)="openEdit($event)"
-          (remove)="onRemove($event)"
-        ></app-products-list>
+          (remove)="onRemove($event)">
+        </app-products-list>
       </div>
 
-      <div class="body" *ngIf="mode() !== 'list'">
+      <!-- Modal Agregar / Editar producto -->
+      <p-dialog
+        [visible]="showAdd()"
+        (visibleChange)="showAdd.set($event)"
+        [modal]="true"
+        [dismissableMask]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [header]="dialogTitle()"
+        [style]="{ width: '720px', maxWidth: '96vw' }"
+      >
         <app-product-form
-          [categories]="store.categories()"
+          [categories]="productCategories()"
           [model]="editing() ?? undefined"
-          (save)="onSave($event)">
-        </app-product-form>
-      </div>
+          (save)="onSave($event)"
+        ></app-product-form>
+      </p-dialog>
     </section>
   `,
   styles: [`
     :host{ display:block; }
-    .page{
-      display:flex; flex-direction:column;
-      gap:.5rem; height:100%;
-      padding: .35rem;
+
+    .products-page{
+      padding:.5rem;
+      display:flex;
+      flex-direction:column;
+      gap:.75rem;
+      height:100%;
+      box-sizing:border-box;
     }
+
     .body{
-      background: var(--p-surface-0);
-      border: 1px solid var(--p-surface-200);
-      border-radius: .75rem;
-      padding: .85rem;
+      background: transparent;
+      border-radius:.75rem;
       min-height: 240px;
     }
 
     @media (min-width: 1024px){
-      .page{ padding:.65rem; gap:.65rem; }
-      .body{ padding: .85rem; }
+      .products-page{
+        padding:.65rem;
+        gap:.65rem;
+      }
+    }
+
+    /* ➤ Más espacio para el título "Agregar producto" dentro del modal */
+    :host ::ng-deep .p-dialog .p-dialog-header{
+      padding: 1rem 1.5rem;
+    }
+
+    :host ::ng-deep .p-dialog .p-dialog-header .p-dialog-title{
+      margin-left: .1rem;
+    }
+
+    :host ::ng-deep .p-dialog .p-dialog-content{
+      padding-top: .35rem;
+      padding-inline: 0; /* el padding lo maneja el formulario */
     }
   `]
 })
 export class ProductsPage {
-  store = inject(ProductsStore);
+  private store = inject(ProductsStore);
+  private categoriesStore = inject(CategoriesStore);
 
-  // UI state
-  mode = signal<Mode>('list');
+  // Categorías reales desde CategoriesStore (solo activas)
+  productCategories = computed<ProductCategory[]>(() =>
+    this.categoriesStore.itemsActive().map(c => ({
+      id: c.id,
+      name: c.name,
+    }))
+  );
+
+  // Switch "Activos"
+  active = signal(true);
+  // Cuando el switch está apagado, mostramos los NO disponibles
+  showUnavailable = computed(() => !this.active());
+
+  // Estado del modal y producto en edición
+  showAdd = signal(false);
   editing = signal<Product | null>(null);
 
-  openAdd(){ this.editing.set(null); this.mode.set('add'); }
-  openEdit(item: Product){ this.editing.set(item); this.mode.set('edit'); }
-  backToList(){ this.mode.set('list'); this.editing.set(null); }
+  dialogTitle = computed(() =>
+    this.editing() ? 'Editar producto' : 'Agregar producto'
+  );
 
-  onSave(data: Omit<Product,'id'>){
+  onActiveChange(v: boolean) {
+    this.active.set(v);
+  }
+
+  openAdd() {
+    this.editing.set(null);
+    this.showAdd.set(true);
+  }
+
+  openEdit(item: Product) {
+    this.editing.set(item);
+    this.showAdd.set(true);
+  }
+
+  closeAdd() {
+    this.showAdd.set(false);
+    this.editing.set(null);
+  }
+
+  onSave(data: Omit<Product, 'id'>) {
     const current = this.editing();
     if (current) {
       this.store.update(current.id, data);
     } else {
       this.store.add(data);
     }
-    this.backToList();
+    this.closeAdd();
   }
 
-  onRemove(id: string){
+  onRemove(id: string) {
     this.store.remove(id);
   }
 }
