@@ -1,4 +1,3 @@
-// src/app/components/categories/categories-list.component.ts
 import { Component, EventEmitter, Input, Output, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CategoriesStore, Category } from '../../pages/categories/categories.store';
