@@ -1,9 +1,22 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { CategoriesStore } from '../../pages/categories/categories.store';
 
 /* PrimeNG v20 */
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
@@ -11,66 +24,146 @@ import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-category-add-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, CheckboxModule, ButtonModule],
+  imports: [
+    CommonModule,
+    DialogModule,
+    ReactiveFormsModule,
+    InputTextModule,
+    CheckboxModule,
+    ButtonModule,
+  ],
   template: `
-    <form [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
-      <!-- Nombre -->
-      <div class="field">
-        <label class="label">Nombre</label>
-        <input
-          pInputText
-          formControlName="name"
-          placeholder="Ej. Bebidas"
-          class="w-full"
-        />
-        <small class="hint" *ngIf="form.controls['name'].touched && form.controls['name'].invalid">
-          El nombre es requerido.
-        </small>
-      </div>
+    <p-dialog
+      [visible]="visible"
+      (visibleChange)="onVisibleChange($event)"
+      [modal]="true"
+      [dismissableMask]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [closable]="false"
+      [header]="isEdit ? 'Editar categoría' : 'Agregar categoría'"
+      [style]="{ width: '520px', maxWidth: '96vw' }"
+    >
+      <!-- Header personalizado: título + X circular -->
+      <ng-template pTemplate="header">
+        <div class="dlg-header">
+          <h2 class="dlg-title">
+            {{ isEdit ? 'Editar categoría' : 'Agregar categoría' }}
+          </h2>
 
-      <!-- Visibilidad -->
-      <div class="field switch-field">
-        <label class="label">Visibilidad</label>
-        <p-checkbox
-          formControlName="visible"
-          [binary]="true"
-          inputId="vis"
-          label="Visible">
-        </p-checkbox>
-      </div>
+          <button type="button" class="dlg-close" (click)="onVisibleChange(false)">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </ng-template>
 
-      <!-- Botones -->
-      <div class="actions">
-        <button
-          pButton
-          type="button"
-          label="Cancelar"
-          class="p-button-text btn-secondary"
-          (click)="close.emit()">
-        </button>
+      <!-- Contenido -->
+      <form [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
+        <!-- Nombre -->
+        <div class="field">
+          <label class="label">Nombre</label>
+          <input
+            pInputText
+            formControlName="name"
+            placeholder="Ej. Bebidas"
+            class="w-full"
+          />
+          <small
+            class="hint"
+            *ngIf="
+              form.controls['name'].touched &&
+              form.controls['name'].invalid
+            "
+          >
+            El nombre es requerido.
+          </small>
+        </div>
 
-        <button
-          pButton
-          type="submit"
-          class="btn-primary"
-          [label]="isEdit ? 'Guardar cambios' : 'Agregar'"
-          [disabled]="form.invalid">
-        </button>
-      </div>
-    </form>
+        <!-- Visibilidad -->
+        <div class="field switch-field">
+          <label class="label">Visibilidad</label>
+          <p-checkbox
+            formControlName="visible"
+            [binary]="true"
+            inputId="vis"
+            label="Visible"
+          >
+          </p-checkbox>
+        </div>
+
+        <!-- Botones -->
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            label="Cancelar"
+            class="p-button-text btn-secondary"
+            (click)="onVisibleChange(false)"
+          >
+          </button>
+
+          <button
+            pButton
+            type="submit"
+            class="btn-primary"
+            [label]="isEdit ? 'Guardar cambios' : 'Agregar'"
+            [disabled]="form.invalid"
+          >
+          </button>
+        </div>
+      </form>
+    </p-dialog>
   `,
   styles: [`
-    :host{
-      display:block;
+    :host{ display:block; }
+
+    /* padding general del diálogo y botón X circular */
+    :host ::ng-deep .p-dialog .p-dialog-header{
+      padding:1rem 1.75rem .75rem;
+    }
+    :host ::ng-deep .p-dialog .p-dialog-header .p-dialog-header-content{
+      width:100%;
+    }
+    :host ::ng-deep .p-dialog .p-dialog-content{
+      padding:.75rem 1.75rem 1.5rem;
     }
 
+    .dlg-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      width:100%;
+      gap:1rem;
+    }
+    .dlg-title{
+      margin:0;
+      font-size:1.35rem;
+      font-weight:700;
+      color:var(--p-text-color);
+    }
+    .dlg-close{
+      width:2.4rem;
+      height:2.4rem;
+      border-radius:999px;
+      border:none;
+      background:var(--p-primary-500);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      padding:0;
+    }
+    .dlg-close i{ font-size:1.1rem; }
+    .dlg-close:hover{ filter:brightness(.96); }
+
+    /* FORMULARIO */
     .form-grid{
       display:grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 220px);
-      column-gap: 1.2rem;
-      row-gap: .8rem;
+      grid-template-columns:minmax(0,1.4fr) minmax(0,220px);
+      column-gap:1.2rem;
+      row-gap:.8rem;
       align-items:flex-end;
-      padding: .6rem 1.4rem .9rem;
       box-sizing:border-box;
     }
 
@@ -84,21 +177,18 @@ import { ButtonModule } from 'primeng/button';
     .label{
       font-size:.88rem;
       font-weight:600;
-      color: var(--p-text-color);
+      color:var(--p-text-color);
     }
-
-    .switch-field{
-      align-items:flex-start;
-    }
+    .switch-field{ align-items:flex-start; }
 
     .hint{
-      color: var(--p-orange-500);
+      color:var(--p-orange-500);
       font-size:.78rem;
       margin-top:.1rem;
     }
 
     .actions{
-      grid-column: 1 / -1;
+      grid-column:1 / -1;
       display:flex;
       justify-content:flex-end;
       gap:.6rem;
@@ -113,41 +203,36 @@ import { ButtonModule } from 'primeng/button';
     }
 
     /* Botones pill */
-    :host ::ng-deep .btn-primary{
+    :host ::ng-deep .btn-primary,
+    :host ::ng-deep .btn-secondary{
       min-height:2.5rem;
-      padding-inline:1.4rem;
       border-radius:999px;
       font-size:.9rem;
       font-weight:600;
     }
-
+    :host ::ng-deep .btn-primary{
+      padding-inline:1.4rem;
+    }
     :host ::ng-deep .btn-primary .p-button-label{
       padding-inline:.8rem;
     }
-
     :host ::ng-deep .btn-secondary{
-      min-height:2.5rem;
       padding-inline:1.1rem;
-      border-radius:999px;
-      font-size:.9rem;
-      font-weight:600;
     }
 
-    @media (max-width: 640px){
+    @media (max-width:640px){
       .form-grid{
-        grid-template-columns: 1fr;
-        padding-inline:1rem;
+        grid-template-columns:1fr;
       }
-      .actions{
-        flex-wrap:wrap;
-      }
+      .actions{ flex-wrap:wrap; }
     }
   `]
 })
 export class CategoryAddDialogComponent implements OnChanges {
 
   @Input() editId: string | null = null;
-  @Output() close = new EventEmitter<void>();
+  @Input() visible = false;
+  @Output() visibleChange = new EventEmitter<boolean>();
 
   form!: FormGroup;
   isEdit = false;
@@ -173,6 +258,10 @@ export class CategoryAddDialogComponent implements OnChanges {
     this.form.reset({ name: '', visible: true });
   }
 
+  onVisibleChange(v: boolean){
+    this.visibleChange.emit(v);
+  }
+
   submit(){
     if (this.form.invalid) return;
     const { name, visible } = this.form.getRawValue();
@@ -183,6 +272,6 @@ export class CategoryAddDialogComponent implements OnChanges {
       this.store.add(String(name), !!visible);
     }
 
-    this.close.emit();
+    this.onVisibleChange(false);
   }
 }

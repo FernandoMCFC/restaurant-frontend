@@ -40,19 +40,34 @@ import { RippleModule } from 'primeng/ripple';
               <span class="name-text">{{ item.name }}</span>
             </td>
             <td class="col-vis">
-              <p-tag [value]="item.visible ? 'Visible' : 'Oculta'"
-                     [severity]="item.visible ? 'success' : 'warning'"></p-tag>
+              <p-tag
+                [value]="item.visible ? 'Visible' : 'Oculta'"
+                [severity]="item.visible ? 'success' : 'warning'"
+                styleClass="cat-tag"
+              ></p-tag>
             </td>
             <td class="col-actions">
-              <button pButton type="button" icon="pi pi-pencil"
-                      class="p-button-text p-button-sm"
-                      (click)="edit.emit(item.id)" pRipple aria-label="Editar"
-                      [disabled]="showDeleted"></button>
+              <button
+                type="button"
+                class="icon-btn"
+                (click)="edit.emit(item.id)"
+                pRipple
+                aria-label="Editar"
+                [disabled]="showDeleted"
+              >
+                <img src="/icons/edit.png" alt="Editar" />
+              </button>
 
-              <button pButton type="button" icon="pi pi-trash"
-                      class="p-button-text p-button-danger p-button-sm"
-                      (click)="onRemove(item.id)" pRipple aria-label="Eliminar"
-                      [disabled]="showDeleted"></button>
+              <button
+                type="button"
+                class="icon-btn"
+                (click)="onRemove(item.id)"
+                pRipple
+                aria-label="Eliminar"
+                [disabled]="showDeleted"
+              >
+                <img src="/icons/delete.png" alt="Eliminar" />
+              </button>
             </td>
           </tr>
         </ng-template>
@@ -99,6 +114,15 @@ import { RippleModule } from 'primeng/ripple';
       transition: background .15s ease;
     }
 
+    /* Más espacio para Visible/Oculta */
+    :host ::ng-deep .cat-tag.p-tag{
+      padding: .18rem .9rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .8rem;
+      letter-spacing: .02em;
+    }
+
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .col-id{ width: 260px; }
     .col-vis{ width: 160px; }
@@ -111,6 +135,31 @@ import { RippleModule } from 'primeng/ripple';
     .name-icon{ color: var(--p-text-muted-color); font-size: .95rem; }
     .name-text{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .empty{ text-align:center; padding: 1rem; color: var(--p-text-muted-color); }
+
+    /* Botones de acción solo con icono PNG, más grandes y separados */
+    .icon-btn{
+      border: none;
+      background: transparent;
+      padding: .25rem;       /* antes .15rem */
+      border-radius: .4rem;
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-right: .5rem;   /* separación entre botones */
+    }
+    .icon-btn:last-child{
+      margin-right: 0;
+    }
+    .icon-btn img{
+      width: 1.3rem;         /* antes 1.1rem */
+      height: 1.3rem;
+      display:block;
+    }
+    .icon-btn:disabled{
+      opacity:.4;
+      cursor: default;
+    }
 
     @media (max-width: 900px){
       .col-id{ width: 200px; }
@@ -125,7 +174,7 @@ import { RippleModule } from 'primeng/ripple';
   `]
 })
 export class CategoriesListComponent {
-  
+
   @Input() showDeleted = false;
 
   @Output() edit = new EventEmitter<string>();
@@ -138,7 +187,6 @@ export class CategoriesListComponent {
     });
   }
 
-  
   ngOnChanges() {
     this.rows.set(this.showDeleted ? [...this.store.itemsDeleted()] : [...this.store.itemsActive()]);
   }

@@ -241,7 +241,7 @@ export interface Product {
       min-width:0;
     }
 
-    .label{
+    .product-form .label{
       display:block;
       margin-bottom:.6rem;
       font-size:.86rem;

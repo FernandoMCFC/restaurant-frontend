@@ -49,29 +49,28 @@ import type { Product } from '../../pages/products/products.types';
             <td class="col-vis">
               <p-tag
                 [value]="item.visibleForClients ? 'Visible' : 'Oculto'"
-                [severity]="item.visibleForClients ? 'success' : 'warn'">
+                [severity]="item.visibleForClients ? 'success' : 'warn'"
+                styleClass="cat-tag">
               </p-tag>
             </td>
 
             <td class="col-actions">
               <button
-                pButton
                 type="button"
-                class="p-button-text p-button-sm"
-                icon="pi pi-pencil"
+                class="icon-btn"
                 (click)="onEdit(item)"
                 pRipple
                 aria-label="Editar">
+                <img src="/icons/edit.png" alt="Editar" />
               </button>
 
               <button
-                pButton
                 type="button"
-                class="p-button-text p-button-danger p-button-sm"
-                icon="pi pi-trash"
+                class="icon-btn"
                 (click)="onRemove(item.id)"
                 pRipple
                 aria-label="Eliminar">
+                <img src="/icons/delete.png" alt="Eliminar" />
               </button>
             </td>
           </tr>
@@ -125,6 +124,15 @@ import type { Product } from '../../pages/products/products.types';
       transition: background .15s ease;
     }
 
+    /* Más espacio para Visible/Oculto */
+    :host ::ng-deep .cat-tag.p-tag{
+      padding: .18rem .9rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .8rem;
+      letter-spacing: .02em;
+    }
+
     .mono{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                    "Liberation Mono", "Courier New", monospace;
@@ -153,6 +161,27 @@ import type { Product } from '../../pages/products/products.types';
       padding: 1.5rem .5rem;
       color: var(--p-text-muted-color);
       font-style: italic;
+    }
+
+    /* Botones de acción solo con icono PNG, un poco más grandes y separados */
+    .icon-btn{
+      border: none;
+      background: transparent;
+      padding: .25rem;       /* antes .15rem */
+      border-radius: .4rem;
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-right: .5rem;   /* separación entre botones */
+    }
+    .icon-btn:last-child{
+      margin-right: 0;
+    }
+    .icon-btn img{
+      width: 1.3rem;         /* antes 1.1rem */
+      height: 1.3rem;
+      display:block;
     }
 
     @media (max-width: 768px){
