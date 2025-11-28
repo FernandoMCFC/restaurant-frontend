@@ -31,6 +31,7 @@ export const APP_MENU_GROUPS: AppMenuGroup[] = [
           { label: 'Categorías', icon: 'pi pi-tags', route: '/products/categories' }
         ]
       },
+      { label: 'Menús',         icon: 'pi pi-book', route: '/menus' },
     ]
   }
 ];

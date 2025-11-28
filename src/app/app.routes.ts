@@ -23,6 +23,8 @@ export const routes: Routes = [
       { path: 'products', loadComponent: () => import('./pages/products/products.page').then(m => m.ProductsPage) },
       { path: 'orders/new', loadComponent: () => import('./pages/orders/order-form.page').then(m => m.OrderFormPage)},
       { path: 'products/categories', loadComponent: () => import('./pages/categories/categories.page').then(m => m.CategoriesPage),},
+      { path: 'menus', loadComponent: () => import('./pages/menus/menus.page').then(m => m.MenusPage) },
+
 
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
